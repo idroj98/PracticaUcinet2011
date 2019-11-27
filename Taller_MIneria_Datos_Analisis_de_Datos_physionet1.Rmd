@@ -1,9 +1,10 @@
 ---
-title: "Physionet 2012 UCI data mortality"
+title: "Carga inicial datos: Physionet 2012 UCI data mortality"
 author: "Ricardo Alberich, Irene Garcia"
 time:  "`Sys.Date()`"
 output: 
   html_document: 
+    keep_md: yes
     number_sections: yes
     toc: yes
   pdf_document: 
@@ -139,29 +140,4 @@ series_parameters %<>% group_by(RecordID,Parameter) %>% mutate(Time_Diff=c(Time[
 all(series_parameters$Time_Diff>=0)
 ```
 
-## Muestro a 60 segundos. 
 
-Primera aproximación en curso
-
-
-```
-serie_regular=function(ts_noregular){
-  ts_noregular=series_parameters %>% filter(Parameter=="HR",RecordID=="132539") 
-  rg_seconds=range(ts_noregular$Seconds)
-  br=seq(from=rg_seconds[1],to=rg_seconds[2],by=60)
-  regular_time=forcats::fct_explicit_na(droplevels(cut(ts_noregular$Seconds,br,right = FALSE)))
-  ts_noregular %>%  mutate(regular_time=regular_time,Parameter) %>% group_by(regular_time) %>% summarise(Value_regular=median(Value))%>% select(Value_regular)-> aux
-  return(aux)
-}
-
-ts_noregularHR=series_parameters %>% filter(Parameter=="HR",RecordID=="132539") 
-
-ts_noregularGCS=series_parameters %>% filter(Parameter=="GCS",RecordID=="132539") 
-
-ts_noregularRespRate=series_parameters %>% filter(Parameter=="RespRate",RecordID=="132539") 
-
-serie_regular(ts_noregularHR)
-
-plot(serie_regular(ts_noregular),type="l")
-plot()
-```

@@ -15,7 +15,7 @@ output:
 
 ### Pregunta A.1 (**1 punto.**)
 
-Explicar modelo y  el código el la carga inicial de datos.
+Explicar modelado y  el código en la carga inicial de datos.
 
 
 ### Pregunta A.2 (**2 puntos.**)

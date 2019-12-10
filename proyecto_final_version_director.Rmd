@@ -40,10 +40,6 @@ Resto de años mas recientes
 
 #  Ingesta de datos
 
-```{r setup}
-knitr::opts_chunk$set(echo = TRUE,cache=TRUE)
-library("tidyverse")
-```
 
 ## Modelo de datos 
 
@@ -96,8 +92,12 @@ series_parameters = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parame
 ```
 
 
-Hay un error en al lectura pues toma minutos y segundos en lugar de horas y minutos. Para pder tener libertad  para tratar Time 
+Hay un error en al lectura pues toma minutos y segundos en lugar de horas y minutos. Para poder tener libertad  para tratar Time `
 
+```{r}
+series_parameters2 = series_parameters %>% mutate(Time=as.character(Time)) %>% separate(Time,into=c("sobra","horas","minutos"),sep=":") %>%
+  select(-sobra) %>% mutate(TimeM=as.numeric(horas)*60+as.numeric(minutos)) %>% select(TimeM,Parameter,Value,RecordID)
+```
 
 
 

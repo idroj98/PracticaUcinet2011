@@ -69,8 +69,11 @@ head(data_paciente_132539,30)
 list_files=paste0(path,lista_pacientes_set_a)
 # Función leer paciente
 leer_paciente=function(file) {
-  read_csv(file, col_types =cols(Time=col_character(), 
-                                 Parameter=col_character(),Value=col_double()))%>% separate(Time,into=c("H","M"),sep=":") %>% mutate(Time_Minutes=as.numeric(H)*60+as.numeric(M)) %>% 
+  read_csv(file, col_types =cols(Time=col_character(),
+                                 Parameter= col_character(),
+                                 Value=col_double())) %>%
+    separate(Time,into=c("H","M"),sep=":") %>% 
+    mutate(Time_Minutes=as.numeric(H)*60+as.numeric(M)) %>% 
     select(Time_Minutes,Parameter,Value)
 }
 
@@ -151,7 +154,7 @@ glimpse(series_parameters)
 
 
 
-En resumen  tenemos
+## En resumen  tenemos
 
 
 ```r
@@ -185,7 +188,7 @@ glimpse(series_parameters)
 
 
 
-## Leer Scores y unificar: series, perfiles y scores
+## Unificar: series, perfiles y scores
 
 Nos faltan los scores clásicos que se utilizan eb las ICU. Estos ewstán el fichero Outcome-a.txt para el set-a
 
@@ -246,14 +249,15 @@ glimpse(Scores_perfilesA)
 ```
 
 
+### Extracción factores de las series 
 
-
+genero una tabla con resumenes de  las variables por paciente: media, desviación típica 
 
 
 ```r
 series_summary=series_parameters %>%
   group_by(RecordID,Parameter) %>%
-  summarise(count=n(), mean=mean(Value,na.rm=TRUE), sd=sd(Value,na.rm=TRUE)) %>%
+  summarise(count=n(), mean=mean(Value,na.rm=TRUE), sd=sd(Value,na.rm=TRUE))%>%
   gather(Stat, Value, count:sd) %>%
   ungroup() %>%
   transmute(RecordID, ParameterStat=paste0(Parameter,"_",Stat), Value) %>%
@@ -262,6 +266,13 @@ series_summary=series_parameters %>%
 
 
 
+```r
+data_tidy=Scores_perfilesA %>% inner_join(series_summary)
+```
+
+```
+## Joining, by = "RecordID"
+```
 
 
 

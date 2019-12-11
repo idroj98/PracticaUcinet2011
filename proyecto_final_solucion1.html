@@ -387,7 +387,10 @@ $(document).ready(function () {
 <li><a href="#ingesta-de-datos"><span class="toc-section-number">2</span> Ingesta de datos</a><ul>
 <li><a href="#modelo-de-datos"><span class="toc-section-number">2.1</span> Modelo de datos</a></li>
 <li><a href="#carga-set_a"><span class="toc-section-number">2.2</span> Carga set_a</a></li>
-<li><a href="#leer-scores-y-unificar-series-perfiles-y-scores"><span class="toc-section-number">2.3</span> Leer Scores y unificar: series, perfiles y scores</a></li>
+<li><a href="#en-resumen-tenemos"><span class="toc-section-number">2.3</span> En resumen tenemos</a></li>
+<li><a href="#unificar-series-perfiles-y-scores"><span class="toc-section-number">2.4</span> Unificar: series, perfiles y scores</a><ul>
+<li><a href="#extraccion-factores-de-las-series"><span class="toc-section-number">2.4.1</span> Extracción factores de las series</a></li>
+</ul></li>
 </ul></li>
 </ul>
 </div>
@@ -428,8 +431,11 @@ head(data_paciente_132539,30)</code></pre>
 list_files=paste0(path,lista_pacientes_set_a)
 # Función leer paciente
 leer_paciente=function(file) {
-  read_csv(file, col_types =cols(Time=col_character(), 
-                                 Parameter=col_character(),Value=col_double()))%&gt;% separate(Time,into=c(&quot;H&quot;,&quot;M&quot;),sep=&quot;:&quot;) %&gt;% mutate(Time_Minutes=as.numeric(H)*60+as.numeric(M)) %&gt;% 
+  read_csv(file, col_types =cols(Time=col_character(),
+                                 Parameter= col_character(),
+                                 Value=col_double())) %&gt;%
+    separate(Time,into=c(&quot;H&quot;,&quot;M&quot;),sep=&quot;:&quot;) %&gt;% 
+    mutate(Time_Minutes=as.numeric(H)*60+as.numeric(M)) %&gt;% 
     select(Time_Minutes,Parameter,Value)
 }
 
@@ -489,7 +495,9 @@ glimpse(series_parameters)</code></pre>
 ## $ Parameter    &lt;chr&gt; &quot;GCS&quot;, &quot;GCS&quot;, &quot;GCS&quot;, &quot;GCS&quot;, &quot;GCS&quot;, &quot;GCS&quot;, &quot;GCS&quot;, &quot;G…
 ## $ Value        &lt;dbl&gt; 15, 15, 15, 15, 15, 15, 15, 15, 14, 15, 15, 15, 15,…
 ## $ RecordID     &lt;dbl&gt; 132539, 132539, 132539, 132539, 132539, 132539, 132…</code></pre>
-<p>En resumen tenemos</p>
+</div>
+<div id="en-resumen-tenemos" class="section level2">
+<h2><span class="header-section-number">2.3</span> En resumen tenemos</h2>
 <pre class="r"><code>#set-a
 glimpse(perfiles)</code></pre>
 <pre><code>## Observations: 4,000
@@ -508,8 +516,8 @@ glimpse(perfiles)</code></pre>
 ## $ Value        &lt;dbl&gt; 15, 15, 15, 15, 15, 15, 15, 15, 14, 15, 15, 15, 15,…
 ## $ RecordID     &lt;dbl&gt; 132539, 132539, 132539, 132539, 132539, 132539, 132…</code></pre>
 </div>
-<div id="leer-scores-y-unificar-series-perfiles-y-scores" class="section level2">
-<h2><span class="header-section-number">2.3</span> Leer Scores y unificar: series, perfiles y scores</h2>
+<div id="unificar-series-perfiles-y-scores" class="section level2">
+<h2><span class="header-section-number">2.4</span> Unificar: series, perfiles y scores</h2>
 <p>Nos faltan los scores clásicos que se utilizan eb las ICU. Estos ewstán el fichero Outcome-a.txt para el set-a</p>
 <pre class="r"><code>scoresApath=&quot;data_basic_physionet/Outcomes-a.txt&quot;
 scoresA=read_csv(scoresApath)</code></pre>
@@ -546,13 +554,19 @@ glimpse(Scores_perfilesA)</code></pre>
 ## $ Length_of_stay      &lt;dbl&gt; 5, 8, 19, 9, 4, 6, 9, 6, 17, 8, 13, 7, 22, 1…
 ## $ Survival            &lt;dbl&gt; -1, -1, -1, 575, 918, 1637, -1, 5, 38, -1, -…
 ## $ `In-hospital_death` &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,…</code></pre>
+<div id="extraccion-factores-de-las-series" class="section level3">
+<h3><span class="header-section-number">2.4.1</span> Extracción factores de las series</h3>
+<p>genero una tabla con resumenes de las variables por paciente: media, desviación típica</p>
 <pre class="r"><code>series_summary=series_parameters %&gt;%
   group_by(RecordID,Parameter) %&gt;%
-  summarise(count=n(), mean=mean(Value,na.rm=TRUE), sd=sd(Value,na.rm=TRUE)) %&gt;%
+  summarise(count=n(), mean=mean(Value,na.rm=TRUE), sd=sd(Value,na.rm=TRUE))%&gt;%
   gather(Stat, Value, count:sd) %&gt;%
   ungroup() %&gt;%
   transmute(RecordID, ParameterStat=paste0(Parameter,&quot;_&quot;,Stat), Value) %&gt;%
   spread(ParameterStat, Value)</code></pre>
+<pre class="r"><code>data_tidy=Scores_perfilesA %&gt;% inner_join(series_summary)</code></pre>
+<pre><code>## Joining, by = &quot;RecordID&quot;</code></pre>
+</div>
 </div>
 </div>
 

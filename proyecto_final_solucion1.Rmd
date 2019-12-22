@@ -1,7 +1,6 @@
 ---
 title: "Carga inicial datos: Physionet 2012 UCI data mortality"
-author: "Ricardo Alberich, Irene Garcia"
-time:  "`Sys.Date()`"
+author: "Jordi Casulleras, Nadal Comparini, Julián Rocabruna"
 output: 
   html_document: 
     keep_md: yes
@@ -18,7 +17,6 @@ library("tidyverse")
 ```
 
 # Introducción: Physionet 2012 UCI data mortality
-
 
 En el concurso del congreso ["Computers in  Cardiology" (ahora "Computing in Cardiology") del año 2012](https://physionet.org/content/challenge-2012/) propuso un  caso de estudio como reto: *Predicción de la tasa de mortalidad de los pacientes de una UCI*
 
@@ -38,8 +36,35 @@ Resto de años mas recientes
 [**RespRate**:  Respiration rate (bpm) breaths for one minute](https://en.wikipedia.org/wiki/Respiratory_rate)
 
 
+# The Research Question
+
+Con los datos que disponemos, se puede predecir "la muerte en hospital" (in hospital death) de muchas formas. Pero en nuestro caso se ha decidio hacer algo un tanto distinto. Se intentará averiguar si hay algún órgano que sea el causante "directo" de muerte.
+
+Para ello, se clasificarán las variables en grupos según al órgano al que pertenezcan. Una vez se tengan los grupos, se escogerá un modelo aducado y se predecirá la variable "muerte en hospital" con cada grupo de variables. El grupo con mayor porcentaje de aciertos será el órgano que tenga más probabilidades de ser un órgano crítico.
+
+
 #  Ingesta de datos
 
+Después de hacer un ejercicio de investigación, se han detectado los siguientes grupos de variables:
+
+*Lista de grupos de variables*
+
+De estas variables no se van a utilizar muchas de ellas debido a la ausencia de estas en muchos pacientes. Para determinar el porcentaje de valores NAs de la cada variable se ha utilizado un pequeño algoritmo.
+
+```{r}
+PercentageNA <- function(df){
+  na <- vector("double", ncol(df))
+  names(na) = colnames(df)
+  for (i in seq_along(df)) {
+    na[[i]] = sum(is.na(df[i])) / nrow(df)
+  }
+
+  return (data.frame(na))
+}
+```
+
+
+Para recoger los datos, se utilizará el código que nos facilitó el profesor Ricardo.
 
 ## Modelo de datos 
 
@@ -166,14 +191,7 @@ data_tidy
 
 
 ```{r}
-na <- vector("double", ncol(data_tidy))
-names(na) = colnames(data_tidy)
-for (i in seq_along(data_tidy)) {
-  na[[i]] = sum(is.na(data_tidy[i])) / nrow(data_tidy)
-}
-
-df = data.frame(na)
-df
+PercentageNA(data_tidy)
 ```
 
 

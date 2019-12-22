@@ -95,11 +95,14 @@ serie_UCI_parameter<-  function(paciente,parameters){
   } 
 
 ##ejemplo
-parameters=c("HR","RespRate","GCS")
+v = c("HCT",
+"Platelets",
+"WBC")
+parameters=v
 serie_paciente1 =serie_UCI_parameter(raw_data[[1]],parameters)
 serie_paciente1
 # paso parámetros y  apilo 
-parameters=c("HR","RespRate","GCS")
+parameters=v
 series_parameters = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters)) %>% bind_rows()
 glimpse(series_parameters)
 ```
@@ -138,6 +141,14 @@ glimpse(Scores_perfilesA)
 genero una tabla con resumenes de  las variables por paciente: media, desviación típica 
 
 ```{r}
+##series_summary=series_parameters %>%
+##  group_by(RecordID,Parameter) %>%
+##  summarise(count=n(), mean=mean(Value,na.rm=TRUE), sd=sd(Value,na.rm=TRUE))%>%
+##  gather(Stat, Value, count:sd) %>%
+##  ungroup() %>%
+##  transmute(RecordID, ParameterStat=paste0(Parameter,"_",Stat), Value) %>%
+##  spread(ParameterStat, Value)
+
 series_summary=series_parameters %>%
   group_by(RecordID,Parameter) %>%
   summarise(count=n(), mean=mean(Value,na.rm=TRUE), sd=sd(Value,na.rm=TRUE))%>%
@@ -150,8 +161,19 @@ series_summary=series_parameters %>%
 
 ```{r}
 data_tidy=Scores_perfilesA %>% inner_join(series_summary)
+data_tidy
 ```
 
 
+```{r}
+na <- vector("double", ncol(data_tidy))
+names(na) = colnames(data_tidy)
+for (i in seq_along(data_tidy)) {
+  na[[i]] = sum(is.na(data_tidy[i])) / nrow(data_tidy)
+}
+
+df = data.frame(na)
+df
+```
 
 

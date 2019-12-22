@@ -97,7 +97,7 @@ serie_UCI_parameter<-  function(paciente,parameters){
 ##ejemplo
 v = c("HCT",
 "Platelets",
-"WBC")
+"WBC","HCO3")
 parameters=v
 serie_paciente1 =serie_UCI_parameter(raw_data[[1]],parameters)
 serie_paciente1

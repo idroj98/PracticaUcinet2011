@@ -1,5 +1,5 @@
 ---
-title: "Carga inicial datos: Physionet 2012 UCI data mortality"
+title: "Proyecto Final: Definición del problema"
 author: "Jordi Casulleras, Nadal Comparini, Julián Rocabruna"
 output: 
   html_document: 
@@ -108,10 +108,11 @@ PercentageNA <- function(df){
 }
 ```
 
+# Modelo de datos 
 
 Con tal de recoger los datos, se utilizará el código que nos facilitó el profesor Ricardo.
 
-# Modelo de datos 
+La idea es generar tantos datasets como órganos queramos comparar. Todavía no se ha llegado a completar toda la ingesta de datos, pero la idea es utilizar un método similar al que planteó Ricardo. A continuación se muestra el código del profesor modificado para generar un dataset con las variables relacionadas con la sangre.
 
 ```{r}
 path="data_basic_physionet/set-a/"# path training
@@ -167,7 +168,7 @@ serie_UCI_parameter<-  function(paciente,parameters){
 ##ejemplo
 v = c("HCT",
 "Platelets",
-"WBC","HCO3")
+"WBC")
 parameters=v
 serie_paciente1 =serie_UCI_parameter(raw_data[[1]],parameters)
 serie_paciente1
@@ -177,10 +178,6 @@ series_parameters = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parame
 glimpse(series_parameters)
 ```
 
-
-
-
-
 ## En resumen  tenemos
 
 ```{r}
@@ -189,13 +186,9 @@ glimpse(perfiles)
 glimpse(series_parameters)
 ```
 
-
-
 ## Unificar: series, perfiles y scores
 
 Nos faltan los scores clásicos que se utilizan eb las ICU. Estos ewstán el fichero Outcome-a.txt para el set-a
-
-
 
 ```{r}
 scoresApath="data_basic_physionet/Outcomes-a.txt"
@@ -205,20 +198,11 @@ Scores_perfilesA= inner_join(perfiles,scoresA,"RecordID")
 glimpse(Scores_perfilesA)
 ```
 
-
 ### Extracción factores de las series 
 
 genero una tabla con resumenes de  las variables por paciente: media, desviación típica 
 
 ```{r}
-##series_summary=series_parameters %>%
-##  group_by(RecordID,Parameter) %>%
-##  summarise(count=n(), mean=mean(Value,na.rm=TRUE), sd=sd(Value,na.rm=TRUE))%>%
-##  gather(Stat, Value, count:sd) %>%
-##  ungroup() %>%
-##  transmute(RecordID, ParameterStat=paste0(Parameter,"_",Stat), Value) %>%
-##  spread(ParameterStat, Value)
-
 series_summary=series_parameters %>%
   group_by(RecordID,Parameter) %>%
   summarise(count=n(), mean=mean(Value,na.rm=TRUE), sd=sd(Value,na.rm=TRUE))%>%
@@ -231,13 +215,16 @@ series_summary=series_parameters %>%
 
 ```{r}
 data_tidy=Scores_perfilesA %>% inner_join(series_summary)
-data_tidy
+head(data_tidy)
 ```
 
+### Porcentaje NAs
 
 ```{r}
 PercentageNA(data_tidy)
 ```
+
+En este caso, el porcentaje de NAs de las variables relacionadas con la sangre es bastante bajo.
 
 # Conclusión
 

@@ -38,19 +38,64 @@ Resto de años mas recientes
 
 # The Research Question
 
-Con los datos que disponemos, se puede predecir "la muerte en hospital" (in hospital death) de muchas formas. Pero en nuestro caso se ha decidio hacer algo un tanto distinto. Se intentará averiguar si hay algún órgano que sea el causante "directo" de muerte.
+Con los datos que disponemos, se puede predecir "la muerte en hospital" (in hospital death) de muchas formas. Pero en nuestro caso se ha decidio hacer algo un tanto distinto. Se intentará averiguar la influencia de los distintos órganos relacionados con nuestras variables con el fallecimiento en el hospital. Es decir, se tratará de definir en que medida los problemas derivados de un órgano en concreto se encuentran relacionadas con la muerte en hospital.
 
-Para ello, se clasificarán las variables en grupos según al órgano al que pertenezcan. Una vez se tengan los grupos, se escogerá un modelo aducado y se predecirá la variable "muerte en hospital" con cada grupo de variables. El grupo con mayor porcentaje de aciertos será el órgano que tenga más probabilidades de ser un órgano crítico.
+Para ello, se clasificarán las variables en grupos según al órgano al que pertenezcan. Una vez se tengan los grupos, se escogerá el modelo adecuado y se predecirá la variable "muerte en hospital" con cada grupo de variables. El grupo con mayor porcentaje de aciertos será el órgano que tenga más probabilidades de ser un órgano crítico.
 
 
-#  Ingesta de datos
+# Ingesta de datos
 
-Después de hacer un ejercicio de investigación, se han detectado los siguientes grupos de variables:
+Después de hacer un ejercicio de investigación, se han detectado 5 grupos de variables, y por tanto 5 órganos, mayoritarios:
 
-*Lista de grupos de variables*
+## Variables relacionados con el **corazón**:
 
-De estas variables no se van a utilizar muchas de ellas debido a la ausencia de estas en muchos pacientes. Para determinar el porcentaje de valores NAs de la cada variable se ha utilizado un pequeño algoritmo.
+*  **AST.** Aspartate transaminase
+*  **DiasABP.** Invasive diastolic arterial blood pressure
+*  **HR.** Hearth Rate
+*  **MAP.** Invasive mean arterial blood pressure
+*  **NIDiasABP.** Non-invasive diastolic arterial blood pressure
+*  **NIMAP.** Non-invasive mean arterial blood pressure
+*  **NISysABP.** Non-invasive systolic arterial blood pressure
+*  **PaCO2.** Partial pressure of arterial CO2
+*  **PaO2.**	Partial pressure of arterial O2
+*  **pH.**	Arterial pH
+*  **SysABP.** Invasive systolic arterial blood pressure
+*  **TropT.** Troponin-T
 
+## Variables relacionadas con el **hígado**:
+
+* **Albumin.** Albumin
+* **ALP.** Alkaline phosphatase
+* **ALT.** Alanine transaminase
+* **AST.** Aspartate transaminase
+* **Bilirubin.** Bilirubin
+* **Cholesterol.** Cholesterol
+
+## Variables relacionadas con el **riñon**:
+
+* **ALP.** Alkaline phosphatase
+* **BUN.** Blood urea nitrogen
+* **Creatinine.**	Creatinine
+* **HCO3.**	Serum bicarbonate
+* **Urine.** Urine
+
+## Variables relacionadas con la **sangre**:
+
+* **HCT.** Hematocrit
+* **Platelets.** Platelets
+* **WBC.** White blood cell count
+
+## Variables relacionadas con los **pulmones**:
+
+* **FiO2.**	Fractional inspired O2
+* **RespRate.**	Respiration rate
+* **Sao2.** O2 saturation in hemoglobin
+
+Las variables restantes que no aparecen entre estos grupos han sido inicialmente descartadas debido a que no ha sido posible asociarles algún órgano en concreto o que el grupo formado ha sido realmente minoritario. No se descarta que durante el transcurso del desarrollo del proyecto se utilice alguna de ellas para reforzar los sistemas según los resultados de estos.
+
+Además, de las variables descritas no se van a utilizar muchas de ellas debido a la ausencia de estas en muchos pacientes. Para determinar el porcentaje de valores NAs de cada variable se ha utilizado una pequeño función.
+
+## Funcion de cálculo de valores no asignados (NAs)
 ```{r}
 PercentageNA <- function(df){
   na <- vector("double", ncol(df))
@@ -64,9 +109,9 @@ PercentageNA <- function(df){
 ```
 
 
-Para recoger los datos, se utilizará el código que nos facilitó el profesor Ricardo.
+Con tal de recoger los datos, se utilizará el código que nos facilitó el profesor Ricardo.
 
-## Modelo de datos 
+# Modelo de datos 
 
 ```{r}
 path="data_basic_physionet/set-a/"# path training
@@ -194,4 +239,15 @@ data_tidy
 PercentageNA(data_tidy)
 ```
 
+# Conclusión
+
+En definitiva, tras realizar una primera inspección de los datos se ha decidido optar por la obtención de resultados según la agrupación por órganos. Tras debatir entre nosotros cúal podría resultar ser la pregunta de investigación más apropiada nos han surgido diferentes opciones:
+
+* **¿Que influencia tiene {órgano en concreto} sobre el fallecimiento en hospital?**
+* **¿Es un grupo de órganos específico el causante del fallecimiento en hospital?**
+
+Básicamente las dos preguntas son muy similares y el punto crucial que comparten es la agrupación de variables en órganos que será en lo que nos centremos durante todo el proyecto.
+Para concluir, no hemos querido seleccionar a estas alturas una sola pregunta de investigación porque queremos ver como se comportan ambas opciones al realizar el desarrollo del proyecto. Además, creemos que de esta forma sabemos hacia donde deben ir dirigidos nuestros primeros pasos pero se nos permite un cierto margen de flexibilidad.
+
+Así pues, aunque no conozcamos todavía la pregunta exacta se podría resumir nuestro proyecto en que se tratará de llevar a cabo un análisis de los causantes de mortalidad en hospital según el órgano afectado.
 

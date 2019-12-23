@@ -1,5 +1,5 @@
 ---
-title: "Proyecto Final: Definición del problema"
+title: "Proyecto Final: Definición"
 author: "Jordi Casulleras, Nadal Comparini, Julián Rocabruna"
 output: 
   html_document: 
@@ -68,7 +68,7 @@ Después de hacer un ejercicio de investigación, se han detectado 5 grupos de v
 * **Bilirubin.** Bilirubin
 * **Cholesterol.** Cholesterol
 
-## Variables relacionadas con el **riñon**:
+## Variables relacionadas con el **riñón**:
 
 * **ALP.** Alkaline phosphatase
 * **BUN.** Blood urea nitrogen

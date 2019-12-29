@@ -123,16 +123,6 @@ length(lista_pacientes_set_a) # número pacientes en training
 ## [1] 4000
 ```
 
-
-```
-data_paciente_132539=read_csv("data_basic_physionet/set-a/132539.txt", col_types =cols(Time=col_time(format="%M:%S"),Parameter=col_character(),
-Value=col_double()))
-str(data_paciente_132539)
-glimpse(data_paciente_132539)
-class(data_paciente_132539)
-head(data_paciente_132539,30)
-```
-
 ## Carga set_a
 
 
@@ -184,12 +174,24 @@ serie_UCI_parameter<-  function(paciente,parameters){
   } 
 
 ##ejemplo
-parameters = c("HCT",
-"Platelets",
-"WBC")
+#parameters = c("FiO2","RespRate","SaO2")
+
+parameters_corazon = c("AST","DiasABP","HR","MAP","NIDiasABP","NIMAP","NISysABP","PaCO2","PaO2","pH","SysABP","TropT")
+parameters_higado = c("Albumin","ALP","ALT","AST","Bilirubin","Cholesterol")
+parameters_rinon = c("ALP","BUN","Creatinine","HCO3","Urine")
+parameters_sangre = c("HCT","Platelets","WBC")
+#parameters_pulmon = c("FiO2","RespRate","SaO2")
+
+parameters = parameters_corazon
 
 serie_paciente1 =serie_UCI_parameter(raw_data[[1]],parameters)
 # paso parámetros y  apilo 
+series_corazon = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_corazon)) %>% bind_rows()
+series_higado = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_higado)) %>% bind_rows()
+series_rinon = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_rinon)) %>% bind_rows()
+series_sangre = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_sangre)) %>% bind_rows()
+#series_pulmon = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_pulmon)) %>% bind_rows()
+
 series_parameters = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters)) %>% bind_rows()
 ```
 
@@ -283,52 +285,28 @@ scoresA=read_csv(scoresApath)
 
 ```r
 scoresA = data.frame("RecordID" = scoresA$RecordID, "In_hospital_death" = scoresA$`In-hospital_death`)
-glimpse(scoresA)
-```
-
-```
-## Observations: 4,000
-## Variables: 2
-## $ RecordID          <dbl> 132539, 132540, 132541, 132543, 132545, 1325...
-## $ In_hospital_death <dbl> 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,...
-```
-
-```r
-Scores_perfilesA= inner_join(perfiles,scoresA,"RecordID")
-glimpse(Scores_perfilesA)
-```
-
-```
-## Observations: 4,000
-## Variables: 7
-## $ RecordID          <dbl> 132539, 132540, 132541, 132543, 132545, 1325...
-## $ Age               <dbl> 54, 76, 44, 68, 88, 64, 68, 78, 64, 74, 64, ...
-## $ Gender            <dbl> 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1,...
-## $ Height            <dbl> -1.0, 175.3, -1.0, 180.3, -1.0, 180.3, 162.6...
-## $ Weight            <dbl> -1.0, 76.0, 56.7, 84.6, -1.0, 114.0, 87.0, 4...
-## $ ICUType           <dbl> 4, 2, 3, 3, 3, 1, 3, 3, 3, 2, 3, 2, 3, 1, 1,...
-## $ In_hospital_death <dbl> 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,...
+##glimpse(scoresA)
+#Scores_perfilesA= inner_join(perfiles,scoresA,"RecordID")
+#glimpse(Scores_perfilesA)
 ```
 
 ### Extracción factores de las series 
 
-genero una tabla con resumenes de  las variables por paciente: media, desviación típica 
+Se genera una tabla con resumenes de  las variables por paciente: media, desviación típica 
+* https://rsanchezs.gitbooks.io/rprogramming/content/chapter9/summarise.html
 
 
 ```r
-series_summary=series_parameters %>%
+series_summary=series_corazon %>%
   group_by(RecordID,Parameter) %>%
-  summarise(count=n(), mean=mean(Value,na.rm=TRUE), sd=sd(Value,na.rm=TRUE))%>%
-  gather(Stat, Value, count:sd) %>%
+  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE))%>%
+  summarise(mean=mean(Value,na.rm=TRUE))%>%
+  gather(Stat, Value, mean:mean) %>%
   ungroup() %>%
   transmute(RecordID, ParameterStat=paste0(Parameter,"_",Stat), Value) %>%
   spread(ParameterStat, Value)
-```
 
-
-
-```r
-data_tidy=Scores_perfilesA %>% inner_join(series_summary)
+data_tidy_corazon = scoresA %>% inner_join(series_summary)
 ```
 
 ```
@@ -336,52 +314,321 @@ data_tidy=Scores_perfilesA %>% inner_join(series_summary)
 ```
 
 ```r
-head(data_tidy)
+head(data_tidy_corazon)
 ```
 
 ```
-## # A tibble: 6 x 16
-##   RecordID   Age Gender Height Weight ICUType In_hospital_dea~ HCT_count
-##      <dbl> <dbl>  <dbl>  <dbl>  <dbl>   <dbl>            <dbl>     <dbl>
-## 1   132539    54      0    -1    -1         4                0         3
-## 2   132540    76      1   175.   76         2                0         9
-## 3   132541    44      0    -1    56.7       3                0         5
-## 4   132543    68      1   180.   84.6       3                0         7
-## 5   132545    88      0    -1    -1         3                0         6
-## 6   132547    64      1   180.  114         1                0         4
-## # ... with 8 more variables: HCT_mean <dbl>, HCT_sd <dbl>,
-## #   Platelets_count <dbl>, Platelets_mean <dbl>, Platelets_sd <dbl>,
-## #   WBC_count <dbl>, WBC_mean <dbl>, WBC_sd <dbl>
+##   RecordID In_hospital_death AST_mean DiasABP_mean  HR_mean MAP_mean
+## 1   132539                 0       NA           NA 70.81081       NA
+## 2   132540                 0       NA     58.89706 80.79412 76.94030
+## 3   132541                 0    199.5     67.12500 83.75926 90.43750
+## 4   132543                 0     15.0           NA 70.98333       NA
+## 5   132545                 0       NA           NA 74.95833       NA
+## 6   132547                 0    104.5     73.62222 88.53191 88.68889
+##   NIDiasABP_mean NIMAP_mean NISysABP_mean PaCO2_mean PaO2_mean  pH_mean
+## 1       50.14706   71.55912      114.3824         NA        NA       NA
+## 2       56.71429   75.30857      112.5000   38.85714  210.1429 7.395000
+## 3       79.00000   96.75132      132.2632   35.50000  134.5000 7.495000
+## 4       65.05172   83.88552      121.5517         NA        NA       NA
+## 5       45.72093   74.94651      133.3953         NA        NA       NA
+## 6       70.50000   81.98500      105.0000   35.14286  110.0000 7.405714
+##   SysABP_mean
+## 1          NA
+## 2    113.4118
+## 3    125.6875
+## 4          NA
+## 5          NA
+## 6    115.6889
+```
+
+```r
+nrow(data_tidy_corazon)
+```
+
+```
+## [1] 3978
+```
+
+
+```r
+series_summary=series_higado %>%
+  group_by(RecordID,Parameter) %>%
+  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE))%>%
+  summarise(mean=mean(Value,na.rm=TRUE))%>%
+  gather(Stat, Value, mean:mean) %>%
+  ungroup() %>%
+  transmute(RecordID, ParameterStat=paste0(Parameter,"_",Stat), Value) %>%
+  spread(ParameterStat, Value)
+
+data_tidy_higado = scoresA %>% inner_join(series_summary)
+```
+
+```
+## Joining, by = "RecordID"
+```
+
+```r
+head(data_tidy_higado)
+```
+
+```
+##   RecordID In_hospital_death Albumin_mean ALP_mean ALT_mean AST_mean
+## 1   132541                 0          2.5      116     83.0    199.5
+## 2   132543                 0          4.4      105     12.0     15.0
+## 3   132545                 0          3.3       NA       NA       NA
+## 4   132547                 0           NA      101     52.5    104.5
+## 5   132551                 1          1.9       47     46.0     82.0
+## 6   132556                 0          2.7      402     36.0     47.0
+##   Bilirubin_mean Cholesterol_mean
+## 1            2.9               NA
+## 2            0.2               NA
+## 3             NA               NA
+## 4            0.4              212
+## 5            0.3               NA
+## 6            0.1               NA
+```
+
+```r
+nrow(data_tidy_higado)
+```
+
+```
+## [1] 2165
+```
+
+
+```r
+series_summary=series_rinon %>%
+  group_by(RecordID,Parameter) %>%
+  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE))%>%
+  summarise(mean=mean(Value,na.rm=TRUE))%>%
+  gather(Stat, Value, mean:mean) %>%
+  ungroup() %>%
+  transmute(RecordID, ParameterStat=paste0(Parameter,"_",Stat), Value) %>%
+  spread(ParameterStat, Value)
+
+data_tidy_rinon = scoresA %>% inner_join(series_summary)
+```
+
+```
+## Joining, by = "RecordID"
+```
+
+```r
+head(data_tidy_rinon)
+```
+
+```
+##   RecordID In_hospital_death ALP_mean  BUN_mean Creatinine_mean HCO3_mean
+## 1   132539                 0       NA 10.500000       0.7500000  27.00000
+## 2   132540                 0       NA 18.333333       1.1000000  22.33333
+## 3   132541                 0      116  4.666667       0.3333333  25.00000
+## 4   132543                 0      105 17.666667       0.7666667  27.66667
+## 5   132545                 0       NA 35.000000       1.0000000  19.00000
+## 6   132547                 0      101 16.750000       0.9750000  19.75000
+##   Urine_mean
+## 1  171.05263
+## 2  151.56098
+## 3  124.95122
+## 4  545.83333
+## 5   62.13158
+## 6  136.33333
+```
+
+```r
+nrow(data_tidy_rinon)
+```
+
+```
+## [1] 3995
+```
+
+
+```r
+series_summary=series_sangre %>%
+  group_by(RecordID,Parameter) %>%
+  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE))%>%
+  summarise(mean=mean(Value,na.rm=TRUE))%>%
+  gather(Stat, Value, mean:mean) %>%
+  ungroup() %>%
+  transmute(RecordID, ParameterStat=paste0(Parameter,"_",Stat), Value) %>%
+  spread(ParameterStat, Value)
+
+data_tidy_sangre = scoresA %>% inner_join(series_summary)
+```
+
+```
+## Joining, by = "RecordID"
+```
+
+```r
+head(data_tidy_sangre)
+```
+
+```
+##   RecordID In_hospital_death HCT_mean Platelets_mean WBC_mean
+## 1   132539                 0 32.50000      203.00000 10.30000
+## 2   132540                 0 28.65556      178.60000 11.26667
+## 3   132541                 0 28.46000       89.66667  4.70000
+## 4   132543                 0 37.44286      330.00000  9.40000
+## 5   132545                 0 29.55000      103.00000  4.30000
+## 6   132547                 0 37.22500      210.75000 16.10000
+```
+
+```r
+nrow(data_tidy_sangre)
+```
+
+```
+## [1] 3937
 ```
 
 ### Porcentaje NAs
 
 
 ```r
-PercentageNA(data_tidy)
+PercentageNA(data_tidy_corazon)
+```
+
+```
+##                           na
+## RecordID          0.00000000
+## In_hospital_death 0.00000000
+## AST_mean          0.56636501
+## DiasABP_mean      0.29638009
+## HR_mean           0.01030669
+## MAP_mean          0.29813977
+## NIDiasABP_mean    0.12443439
+## NIMAP_mean        0.12493715
+## NISysABP_mean     0.12192056
+## PaCO2_mean        0.24007039
+## PaO2_mean         0.24007039
+## pH_mean           0.23579688
+## SysABP_mean       0.29638009
+```
+
+```r
+PercentageNA(data_tidy_higado)
+```
+
+```
+##                          na
+## RecordID          0.0000000
+## In_hospital_death 0.0000000
+## Albumin_mean      0.2540416
+## ALP_mean          0.2193995
+## ALT_mean          0.2050808
+## AST_mean          0.2032333
+## Bilirubin_mean    0.2064665
+## Cholesterol_mean  0.8591224
+```
+
+```r
+PercentageNA(data_tidy_rinon)
+```
+
+```
+##                           na
+## RecordID          0.00000000
+## In_hospital_death 0.00000000
+## ALP_mean          0.57697121
+## BUN_mean          0.01476846
+## Creatinine_mean   0.01476846
+## HCO3_mean         0.01777222
+## Urine_mean        0.02803504
+```
+
+```r
+PercentageNA(data_tidy_sangre)
 ```
 
 ```
 ##                             na
 ## RecordID          0.0000000000
-## Age               0.0000000000
-## Gender            0.0000000000
-## Height            0.0000000000
-## Weight            0.0000000000
-## ICUType           0.0000000000
 ## In_hospital_death 0.0000000000
-## HCT_count         0.0002540005
 ## HCT_mean          0.0002540005
-## HCT_sd            0.0172720345
-## Platelets_count   0.0012700025
 ## Platelets_mean    0.0012700025
-## Platelets_sd      0.0251460503
-## WBC_count         0.0025400051
 ## WBC_mean          0.0025400051
-## WBC_sd            0.0287020574
 ```
 
-En este caso, el porcentaje de NAs de las variables relacionadas con la sangre es bastante bajo.
+
+```r
+for(i in 1:ncol(data_tidy_corazon)){
+  data_tidy_corazon[is.na(data_tidy_corazon[,i]), i] <- mean(data_tidy_corazon[,i], na.rm = TRUE)
+}
+for(i in 1:ncol(data_tidy_higado)){
+  data_tidy_higado[is.na(data_tidy_higado[,i]), i] <- mean(data_tidy_higado[,i], na.rm = TRUE)
+}
+for(i in 1:ncol(data_tidy_rinon)){
+  data_tidy_rinon[is.na(data_tidy_rinon[,i]), i] <- mean(data_tidy_rinon[,i], na.rm = TRUE)
+}
+for(i in 1:ncol(data_tidy_sangre)){
+  data_tidy_sangre[is.na(data_tidy_sangre[,i]), i] <- mean(data_tidy_sangre[,i], na.rm = TRUE)
+}
+
+PercentageNA(data_tidy_corazon)
+```
+
+```
+##                   na
+## RecordID           0
+## In_hospital_death  0
+## AST_mean           0
+## DiasABP_mean       0
+## HR_mean            0
+## MAP_mean           0
+## NIDiasABP_mean     0
+## NIMAP_mean         0
+## NISysABP_mean      0
+## PaCO2_mean         0
+## PaO2_mean          0
+## pH_mean            0
+## SysABP_mean        0
+```
+
+```r
+PercentageNA(data_tidy_higado)
+```
+
+```
+##                   na
+## RecordID           0
+## In_hospital_death  0
+## Albumin_mean       0
+## ALP_mean           0
+## ALT_mean           0
+## AST_mean           0
+## Bilirubin_mean     0
+## Cholesterol_mean   0
+```
+
+```r
+PercentageNA(data_tidy_rinon)
+```
+
+```
+##                   na
+## RecordID           0
+## In_hospital_death  0
+## ALP_mean           0
+## BUN_mean           0
+## Creatinine_mean    0
+## HCO3_mean          0
+## Urine_mean         0
+```
+
+```r
+PercentageNA(data_tidy_sangre)
+```
+
+```
+##                   na
+## RecordID           0
+## In_hospital_death  0
+## HCT_mean           0
+## Platelets_mean     0
+## WBC_mean           0
+```
 
 # Conclusión
 

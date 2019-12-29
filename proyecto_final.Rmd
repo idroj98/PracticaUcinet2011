@@ -120,16 +120,6 @@ lista_pacientes_set_a=dir(path) # lista  ficheros pacientes
 length(lista_pacientes_set_a) # número pacientes en training
 ```
 
-
-```
-data_paciente_132539=read_csv("data_basic_physionet/set-a/132539.txt", col_types =cols(Time=col_time(format="%M:%S"),Parameter=col_character(),
-Value=col_double()))
-str(data_paciente_132539)
-glimpse(data_paciente_132539)
-class(data_paciente_132539)
-head(data_paciente_132539,30)
-```
-
 ## Carga set_a
 
 ```{r}
@@ -166,12 +156,24 @@ serie_UCI_parameter<-  function(paciente,parameters){
   } 
 
 ##ejemplo
-parameters = c("HCT",
-"Platelets",
-"WBC")
+#parameters = c("FiO2","RespRate","SaO2")
+
+parameters_corazon = c("AST","DiasABP","HR","MAP","NIDiasABP","NIMAP","NISysABP","PaCO2","PaO2","pH","SysABP","TropT")
+parameters_higado = c("Albumin","ALP","ALT","AST","Bilirubin","Cholesterol")
+parameters_rinon = c("ALP","BUN","Creatinine","HCO3","Urine")
+parameters_sangre = c("HCT","Platelets","WBC")
+#parameters_pulmon = c("FiO2","RespRate","SaO2")
+
+parameters = parameters_corazon
 
 serie_paciente1 =serie_UCI_parameter(raw_data[[1]],parameters)
 # paso parámetros y  apilo 
+series_corazon = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_corazon)) %>% bind_rows()
+series_higado = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_higado)) %>% bind_rows()
+series_rinon = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_rinon)) %>% bind_rows()
+series_sangre = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_sangre)) %>% bind_rows()
+#series_pulmon = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_pulmon)) %>% bind_rows()
+
 series_parameters = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters)) %>% bind_rows()
 ```
 
@@ -196,40 +198,108 @@ Nos faltan los scores clásicos que se utilizan eb las ICU. Estos ewstán el fic
 scoresApath="data_basic_physionet/Outcomes-a.txt"
 scoresA=read_csv(scoresApath)
 scoresA = data.frame("RecordID" = scoresA$RecordID, "In_hospital_death" = scoresA$`In-hospital_death`)
-glimpse(scoresA)
-Scores_perfilesA= inner_join(perfiles,scoresA,"RecordID")
-glimpse(Scores_perfilesA)
+##glimpse(scoresA)
+#Scores_perfilesA= inner_join(perfiles,scoresA,"RecordID")
+#glimpse(Scores_perfilesA)
 ```
 
 ### Extracción factores de las series 
 
-genero una tabla con resumenes de  las variables por paciente: media, desviación típica 
+Se genera una tabla con resumenes de  las variables por paciente: media, desviación típica 
+* https://rsanchezs.gitbooks.io/rprogramming/content/chapter9/summarise.html
 
 ```{r}
-series_summary=series_parameters %>%
+series_summary=series_corazon %>%
   group_by(RecordID,Parameter) %>%
-  summarise(count=n(), mean=mean(Value,na.rm=TRUE), sd=sd(Value,na.rm=TRUE))%>%
-  gather(Stat, Value, count:sd) %>%
+  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE))%>%
+  summarise(mean=mean(Value,na.rm=TRUE))%>%
+  gather(Stat, Value, mean:mean) %>%
   ungroup() %>%
   transmute(RecordID, ParameterStat=paste0(Parameter,"_",Stat), Value) %>%
   spread(ParameterStat, Value)
 
-head(series_summary)
+data_tidy_corazon = scoresA %>% inner_join(series_summary)
+
+head(data_tidy_corazon)
+nrow(data_tidy_corazon)
 ```
 
+```{r}
+series_summary=series_higado %>%
+  group_by(RecordID,Parameter) %>%
+  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE))%>%
+  summarise(mean=mean(Value,na.rm=TRUE))%>%
+  gather(Stat, Value, mean:mean) %>%
+  ungroup() %>%
+  transmute(RecordID, ParameterStat=paste0(Parameter,"_",Stat), Value) %>%
+  spread(ParameterStat, Value)
+
+data_tidy_higado = scoresA %>% inner_join(series_summary)
+
+head(data_tidy_higado)
+nrow(data_tidy_higado)
+```
 
 ```{r}
-data_tidy=Scores_perfilesA %>% inner_join(series_summary)
-head(data_tidy)
+series_summary=series_rinon %>%
+  group_by(RecordID,Parameter) %>%
+  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE))%>%
+  summarise(mean=mean(Value,na.rm=TRUE))%>%
+  gather(Stat, Value, mean:mean) %>%
+  ungroup() %>%
+  transmute(RecordID, ParameterStat=paste0(Parameter,"_",Stat), Value) %>%
+  spread(ParameterStat, Value)
+
+data_tidy_rinon = scoresA %>% inner_join(series_summary)
+
+head(data_tidy_rinon)
+nrow(data_tidy_rinon)
+```
+
+```{r}
+series_summary=series_sangre %>%
+  group_by(RecordID,Parameter) %>%
+  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE))%>%
+  summarise(mean=mean(Value,na.rm=TRUE))%>%
+  gather(Stat, Value, mean:mean) %>%
+  ungroup() %>%
+  transmute(RecordID, ParameterStat=paste0(Parameter,"_",Stat), Value) %>%
+  spread(ParameterStat, Value)
+
+data_tidy_sangre = scoresA %>% inner_join(series_summary)
+
+head(data_tidy_sangre)
+nrow(data_tidy_sangre)
 ```
 
 ### Porcentaje NAs
 
 ```{r}
-PercentageNA(data_tidy)
+PercentageNA(data_tidy_corazon)
+PercentageNA(data_tidy_higado)
+PercentageNA(data_tidy_rinon)
+PercentageNA(data_tidy_sangre)
 ```
 
-En este caso, el porcentaje de NAs de las variables relacionadas con la sangre es bastante bajo.
+```{r}
+for(i in 1:ncol(data_tidy_corazon)){
+  data_tidy_corazon[is.na(data_tidy_corazon[,i]), i] <- mean(data_tidy_corazon[,i], na.rm = TRUE)
+}
+for(i in 1:ncol(data_tidy_higado)){
+  data_tidy_higado[is.na(data_tidy_higado[,i]), i] <- mean(data_tidy_higado[,i], na.rm = TRUE)
+}
+for(i in 1:ncol(data_tidy_rinon)){
+  data_tidy_rinon[is.na(data_tidy_rinon[,i]), i] <- mean(data_tidy_rinon[,i], na.rm = TRUE)
+}
+for(i in 1:ncol(data_tidy_sangre)){
+  data_tidy_sangre[is.na(data_tidy_sangre[,i]), i] <- mean(data_tidy_sangre[,i], na.rm = TRUE)
+}
+
+PercentageNA(data_tidy_corazon)
+PercentageNA(data_tidy_higado)
+PercentageNA(data_tidy_rinon)
+PercentageNA(data_tidy_sangre)
+```
 
 # Conclusión
 

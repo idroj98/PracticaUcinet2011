@@ -14,6 +14,8 @@ output:
 ```{r setup0, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE,cache=TRUE)
 library("tidyverse")
+library(dplyr)
+library(neuralnet)
 ```
 
 # Introducción: Physionet 2012 UCI data mortality
@@ -122,7 +124,7 @@ length(lista_pacientes_set_a) # número pacientes en training
 
 ## Carga set_a
 
-```{r}
+```{r cache=TRUE }
 # lista path's  a cada  ficjero de paciente
 list_files=paste0(path,lista_pacientes_set_a)
 # Función leer paciente
@@ -275,22 +277,113 @@ nrow(data_tidy_sangre)
 ### Porcentaje NAs
 
 ```{r}
-PercentageNA(data_tidy_corazon)
-PercentageNA(data_tidy_higado)
-PercentageNA(data_tidy_rinon)
-PercentageNA(data_tidy_sangre)
+NA_corazon <- PercentageNA(data_tidy_corazon)
+NA_higado <- PercentageNA(data_tidy_higado)
+NA_rinon <- PercentageNA(data_tidy_rinon)
+NA_sangre <- PercentageNA(data_tidy_sangre)
 ```
 
+
+#### Gráfica de NA's según el órgano
 ```{r}
+NA_Plot_Corazon <-  ggplot(data=NA_corazon, aes(x=rownames(NA_corazon), y=NA_corazon$na * 100, fill=rownames(NA_corazon))) + 
+                    geom_bar(stat="identity", position="stack") +
+                    ggtitle("Corazón", "Porcentaje de NA's en sus variables.") +
+                    labs(x = "Variables relacionadas", y = "Porcentaje de NA (%)") + 
+                    theme (axis.text.x = element_text(size=rel(0.65)))
+
+NA_Plot_Higado  <-  ggplot(data=NA_higado, aes(x=rownames(NA_higado), y=NA_higado$na * 100, fill=rownames(NA_higado))) + 
+                    geom_bar(stat="identity", position="stack") +
+                    ggtitle("Higado", "Porcentaje de NA's en sus variables.") +
+                    labs(x = "Variables relacionadas", y = "Porcentaje de NA (%)") + 
+                    theme (axis.text.x = element_text(size=rel(0.65)))
+
+NA_Plot_Rinon   <-  ggplot(data=NA_rinon, aes(x=rownames(NA_rinon), y=NA_rinon$na * 100, fill=rownames(NA_rinon))) + 
+                    geom_bar(stat="identity", position="stack") +
+                    ggtitle("Riñón", "Porcentaje de NA's en sus variables.") +
+                    labs(x = "Variables relacionadas", y = "Porcentaje de NA (%)") + 
+                    theme (axis.text.x = element_text(size=rel(0.65)))
+
+NA_Plot_Sangre  <-  ggplot(data=NA_sangre, aes(x=rownames(NA_sangre), y=NA_sangre$na * 100, fill=rownames(NA_sangre))) + 
+                    geom_bar(stat="identity", position="stack") +
+                    ggtitle("Sangre", "Porcentaje de NA's en sus variables.") +
+                    labs(x = "Variables relacionadas", y = "Porcentaje de NA (%)") + 
+                    theme (axis.text.x = element_text(size=rel(0.65)))
+NA_Plot_Corazon
+NA_Plot_Higado
+NA_Plot_Rinon
+NA_Plot_Sangre
+```
+
+#### ¿Qué variables deberíamos mantener?
+
+Tras realizar el cálculo de valores no asignados de cada variables según el órgano podemos detectar aquellas variables que tienen un alto porcentaje de NA's. Con tal de conseguir unos datos lo más fidedignos posibles hemos decidido eliminar aquellas variables cuyo porcentaje de NA's superase el 30%.
+Así pues, las variables resultantes de cada órgano son:
+
+
+**Corazón**
+
+- DiasABP_mean.
+- HR_mean.
+- MAP_mean.
+- NIDiasABP_mean.
+- NIMAP_mean.
+- NISysABP_mean.
+- PaCO2_mean.
+- PaO2_mean.
+- pH_mean.
+- SysABP_mean.
+
+
+**Higado**
+
+- Albumin_mean.
+- ALP_mean.
+- ALT_mean.
+- AST_mean.
+- Billirubin
+
+
+**Riñón**
+
+- BUN.
+- Creatinine.
+- HCO3.
+- Urine.
+
+
+**Sangre**:
+
+- HCT.
+- Platelets.
+- WBC.
+
+
+*En todas ellas se presupone la conservación de la variable RecordID y la variable a predecir in_hospital_death.*
+
+
+### Selección de variables a utilizar
+
+En las siguientes instrucciones se procede a retirar las variables que en el anterior apartada hemos visto que sobrepasan nuestro límite de NA's para cada órgano. Además, para el resto de variables que se mantienen en los distintos *datasets* se ha decidido sustituir los valores no asignados restantes por la media, de esta manera podemos seguir computando resultados sin tener que prescindir de demasiados registros.
+
+```{r}
+
+data_tidy_corazon <- select(data_tidy_corazon, -AST_mean)
 for(i in 1:ncol(data_tidy_corazon)){
   data_tidy_corazon[is.na(data_tidy_corazon[,i]), i] <- mean(data_tidy_corazon[,i], na.rm = TRUE)
 }
+
+data_tidy_higado <- select(data_tidy_higado, -Cholesterol_mean)
 for(i in 1:ncol(data_tidy_higado)){
   data_tidy_higado[is.na(data_tidy_higado[,i]), i] <- mean(data_tidy_higado[,i], na.rm = TRUE)
 }
+
+data_tidy_rinon <- select(data_tidy_rinon, -ALP_mean)
 for(i in 1:ncol(data_tidy_rinon)){
   data_tidy_rinon[is.na(data_tidy_rinon[,i]), i] <- mean(data_tidy_rinon[,i], na.rm = TRUE)
 }
+
+# No se elimina ninguna variable
 for(i in 1:ncol(data_tidy_sangre)){
   data_tidy_sangre[is.na(data_tidy_sangre[,i]), i] <- mean(data_tidy_sangre[,i], na.rm = TRUE)
 }
@@ -300,6 +393,62 @@ PercentageNA(data_tidy_higado)
 PercentageNA(data_tidy_rinon)
 PercentageNA(data_tidy_sangre)
 ```
+
+# Primeras predicciones
+
+En primer lugar, trataremos de realizar unas predicciones no muy sofisticadas haciendo uso de un modelo clasificador de red neuronal.
+
+Haremos uso de la siguiente función para extraer las distintas métricas de cada modelo.
+```{r}
+metrics = function(neural_net, data_test, all_metrics = TRUE){
+  pred <- predict(neural_net, data_test)
+  
+  conf_Matrix <- table(prediction = round(pred), actual = data_test$In_hospital_death)
+  
+  accuracy <- sum(diag(conf_Matrix))/sum(conf_Matrix)
+  cat(sprintf("Accuracy: %f", accuracy))
+  
+  precision <- conf_Matrix[1,1]/sum(conf_Matrix[1,])
+  cat(sprintf("\nPrecision: %f", precision))
+  
+  recall <- conf_Matrix[1,1]/sum(conf_Matrix[,1])
+  cat(sprintf("\nRecall: %f", recall))
+  
+  if(all_metrics == TRUE){
+    specificity <- conf_Matrix[2,2]/sum(conf_Matrix[,2])
+    cat(sprintf("\nSpecificity: %f", specificity))
+  }
+}
+```
+
+## División de los datasets en Training y Test.
+
+**POR AHORA SOLO SE HA DIVIDIDO EL CORAZON**
+```{r}
+set.seed(101)
+split_idx <- sample(seq_len(nrow(data_tidy_corazon)), size = 0.67*nrow(data_tidy_corazon))
+data_tidy_corazon.train_set <- data_tidy_corazon[split_idx,]
+data_tidy_corazon.test_set <- data_tidy_corazon[-split_idx,]
+```
+
+
+```{r}
+nn_corazon <- neuralnet("In_hospital_death ~ DiasABP_mean + HR_mean + MAP_mean + NIDiasABP_mean + NIMAP_mean + NISysABP_mean + PaCO2_mean + PaO2_mean + pH_mean + SysABP_mean", 
+                         data = data_tidy_corazon.train_set,
+                         hidden = c(8,4,4,2),
+                         algorithm = "backprop",
+                         linear.output = FALSE, # FALSE: Classification TRUE: Regression
+                         err.fct = "sse", #Error Function 
+                         act.fct = "logistic",
+                         learningrate = 0.01
+                         ) #Activation Function
+cat(sprintf("Best error reached: %f", nn_corazon$result.matrix[c('error'), ]))
+```
+
+```{r}
+metrics(nn_corazon, data_tidy_corazon.test_set, FALSE)
+```
+
 
 # Conclusión
 

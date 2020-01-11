@@ -686,7 +686,12 @@ metrics = function(neural_net, data_test, all_metrics = TRUE){
   cat(sprintf("Accuracy: %f", accuracy))
   
   precision <- conf_Matrix[1,1]/sum(conf_Matrix[1,])
-  cat(sprintf("\nPrecision: %f", precision))
+  cat(sprintf("\nPrecision C1: %f", precision))
+  
+  if(nrow(conf_Matrix) > 1){
+    precision <- conf_Matrix[2,2]/sum(conf_Matrix[2,])
+    cat(sprintf("\nPrecision C2: %f", precision))
+  }
   
   recall <- conf_Matrix[1,1]/sum(conf_Matrix[,1])
   cat(sprintf("\nRecall: %f", recall))
@@ -695,6 +700,8 @@ metrics = function(neural_net, data_test, all_metrics = TRUE){
     specificity <- conf_Matrix[2,2]/sum(conf_Matrix[,2])
     cat(sprintf("\nSpecificity: %f", specificity))
   }
+  
+  return (conf_Matrix)
 }
 ```
 
@@ -754,30 +761,42 @@ split_idx <- sample(seq_len(nrow(data_norm_sangre)), size = 0.67*nrow(data_norm_
 data_norm_sangre.train_set <- data_norm_sangre[split_idx,]
 data_norm_sangre.test_set <- data_norm_sangre[-split_idx,]
 ```
+## Predicción corazón
 
-
+## Predicción sangre
 
 ```r
 nn_sangre <- neuralnet("In_hospital_death ~ HCT_mean + Platelets_mean + WBC_mean", 
                          data = data_norm_sangre.train_set,
-                         hidden = c(8,4,4,2),
+                         hidden = c(4,8,8,4),
                          algorithm = "backprop",
                          linear.output = FALSE, # FALSE: Classification TRUE: Regression
                          err.fct = "sse", #Error Function 
                          act.fct = "logistic",
                          learningrate = 0.01
                          ) #Activation Function
+plot(nn_sangre)
 ```
 
 
 ```r
+pred <- predict(nn_sangre, data_norm_sangre.test_set)
+#data.frame(data_norm_sangre.test_set$In_hospital_death,round(pred))
 metrics(nn_sangre, data_norm_sangre.test_set, FALSE)
 ```
 
 ```
-## Accuracy: 0.868462
-## Precision: 0.868462
-## Recall: 1.000000
+## Accuracy: 0.864615
+## Precision C1: 0.869666
+## Precision C2: 0.272727
+## Recall: 0.992914
+```
+
+```
+##           actual
+## prediction    0    1
+##          0 1121  168
+##          1    8    3
 ```
 
 

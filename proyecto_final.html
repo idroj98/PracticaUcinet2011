@@ -392,6 +392,8 @@ summary {
 </ul></li>
 <li><a href="#primeras-predicciones"><span class="toc-section-number">5</span> Primeras predicciones</a><ul>
 <li><a href="#division-de-los-datasets-en-training-y-test-y-normalizacion-de-los-datos."><span class="toc-section-number">5.1</span> División de los datasets en Training y Test, y normalización de los datos.</a></li>
+<li><a href="#prediccion-corazon"><span class="toc-section-number">5.2</span> Predicción corazón</a></li>
+<li><a href="#prediccion-sangre"><span class="toc-section-number">5.3</span> Predicción sangre</a></li>
 </ul></li>
 <li><a href="#conclusion"><span class="toc-section-number">6</span> Conclusión</a></li>
 </ul>
@@ -892,7 +894,12 @@ PercentageNA(data_tidy_corazon)</code></pre>
   cat(sprintf(&quot;Accuracy: %f&quot;, accuracy))
   
   precision &lt;- conf_Matrix[1,1]/sum(conf_Matrix[1,])
-  cat(sprintf(&quot;\nPrecision: %f&quot;, precision))
+  cat(sprintf(&quot;\nPrecision C1: %f&quot;, precision))
+  
+  if(nrow(conf_Matrix) &gt; 1){
+    precision &lt;- conf_Matrix[2,2]/sum(conf_Matrix[2,])
+    cat(sprintf(&quot;\nPrecision C2: %f&quot;, precision))
+  }
   
   recall &lt;- conf_Matrix[1,1]/sum(conf_Matrix[,1])
   cat(sprintf(&quot;\nRecall: %f&quot;, recall))
@@ -901,6 +908,8 @@ PercentageNA(data_tidy_corazon)</code></pre>
     specificity &lt;- conf_Matrix[2,2]/sum(conf_Matrix[,2])
     cat(sprintf(&quot;\nSpecificity: %f&quot;, specificity))
   }
+  
+  return (conf_Matrix)
 }</code></pre>
 <div id="division-de-los-datasets-en-training-y-test-y-normalizacion-de-los-datos." class="section level2">
 <h2><span class="header-section-number">5.1</span> División de los datasets en Training y Test, y normalización de los datos.</h2>
@@ -946,19 +955,33 @@ data_tidy_sangre.test_set &lt;- data_tidy_sangre[-split_idx,]
 split_idx &lt;- sample(seq_len(nrow(data_norm_sangre)), size = 0.67*nrow(data_norm_sangre))
 data_norm_sangre.train_set &lt;- data_norm_sangre[split_idx,]
 data_norm_sangre.test_set &lt;- data_norm_sangre[-split_idx,]</code></pre>
+</div>
+<div id="prediccion-corazon" class="section level2">
+<h2><span class="header-section-number">5.2</span> Predicción corazón</h2>
+</div>
+<div id="prediccion-sangre" class="section level2">
+<h2><span class="header-section-number">5.3</span> Predicción sangre</h2>
 <pre class="r"><code>nn_sangre &lt;- neuralnet(&quot;In_hospital_death ~ HCT_mean + Platelets_mean + WBC_mean&quot;, 
                          data = data_norm_sangre.train_set,
-                         hidden = c(8,4,4,2),
+                         hidden = c(4,8,8,4),
                          algorithm = &quot;backprop&quot;,
                          linear.output = FALSE, # FALSE: Classification TRUE: Regression
                          err.fct = &quot;sse&quot;, #Error Function 
                          act.fct = &quot;logistic&quot;,
                          learningrate = 0.01
-                         ) #Activation Function</code></pre>
-<pre class="r"><code>metrics(nn_sangre, data_norm_sangre.test_set, FALSE)</code></pre>
-<pre><code>## Accuracy: 0.868462
-## Precision: 0.868462
-## Recall: 1.000000</code></pre>
+                         ) #Activation Function
+plot(nn_sangre)</code></pre>
+<pre class="r"><code>pred &lt;- predict(nn_sangre, data_norm_sangre.test_set)
+#data.frame(data_norm_sangre.test_set$In_hospital_death,round(pred))
+metrics(nn_sangre, data_norm_sangre.test_set, FALSE)</code></pre>
+<pre><code>## Accuracy: 0.864615
+## Precision C1: 0.869666
+## Precision C2: 0.272727
+## Recall: 0.992914</code></pre>
+<pre><code>##           actual
+## prediction    0    1
+##          0 1121  168
+##          1    8    3</code></pre>
 </div>
 </div>
 <div id="conclusion" class="section level1">

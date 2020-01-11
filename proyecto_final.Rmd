@@ -413,7 +413,12 @@ metrics = function(neural_net, data_test, all_metrics = TRUE){
   cat(sprintf("Accuracy: %f", accuracy))
   
   precision <- conf_Matrix[1,1]/sum(conf_Matrix[1,])
-  cat(sprintf("\nPrecision: %f", precision))
+  cat(sprintf("\nPrecision C1: %f", precision))
+  
+  if(nrow(conf_Matrix) > 1){
+    precision <- conf_Matrix[2,2]/sum(conf_Matrix[2,])
+    cat(sprintf("\nPrecision C2: %f", precision))
+  }
   
   recall <- conf_Matrix[1,1]/sum(conf_Matrix[,1])
   cat(sprintf("\nRecall: %f", recall))
@@ -422,6 +427,8 @@ metrics = function(neural_net, data_test, all_metrics = TRUE){
     specificity <- conf_Matrix[2,2]/sum(conf_Matrix[,2])
     cat(sprintf("\nSpecificity: %f", specificity))
   }
+  
+  return (conf_Matrix)
 }
 ```
 
@@ -478,11 +485,10 @@ data_norm_sangre.train_set <- data_norm_sangre[split_idx,]
 data_norm_sangre.test_set <- data_norm_sangre[-split_idx,]
 
 ```
-
-
+## Predicción corazón
 ```{r}
-nn_sangre <- neuralnet("In_hospital_death ~ HCT_mean + Platelets_mean + WBC_mean", 
-                         data = data_norm_sangre.train_set,
+nn_corazon <- neuralnet("In_hospital_death ~ DiasABP_mean + HR_mean + MAP_mean + NIDiasABP_mean + NIMAP_mean + NISysABP_mean + PaCO2_mean + PaO2_mean + pH_mean + SysABP_mean", 
+                         data = data_tidy_corazon.train_set,
                          hidden = c(8,4,4,2),
                          algorithm = "backprop",
                          linear.output = FALSE, # FALSE: Classification TRUE: Regression
@@ -490,9 +496,30 @@ nn_sangre <- neuralnet("In_hospital_death ~ HCT_mean + Platelets_mean + WBC_mean
                          act.fct = "logistic",
                          learningrate = 0.01
                          ) #Activation Function
+#cat(sprintf("Best error reached: %f", nn_corazon$result.matrix[c('error'), ]))
 ```
 
 ```{r}
+metrics(nn_corazon, data_tidy_corazon.test_set, FALSE)
+```
+## Predicción sangre
+```{r}
+set.seed(101)
+nn_sangre <- neuralnet("In_hospital_death ~ HCT_mean + Platelets_mean + WBC_mean", 
+                         data = data_norm_sangre.train_set,
+                         hidden = c(4,8,8,4),
+                         algorithm = "backprop",
+                         linear.output = FALSE, # FALSE: Classification TRUE: Regression
+                         err.fct = "sse", #Error Function 
+                         act.fct = "logistic",
+                         learningrate = 0.01
+                         ) #Activation Function
+plot(nn_sangre)
+```
+
+```{r}
+pred <- predict(nn_sangre, data_norm_sangre.test_set)
+#data.frame(data_norm_sangre.test_set$In_hospital_death,round(pred))
 metrics(nn_sangre, data_norm_sangre.test_set, FALSE)
 ```
 

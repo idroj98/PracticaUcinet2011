@@ -215,20 +215,20 @@ series_parameters = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parame
 ```
 
 ```
-## # A tibble: 45,285 x 4
+## # A tibble: 1,033,025 x 4
 ##    Time_Minutes Parameter Value RecordID
 ##           <dbl> <chr>     <dbl>    <dbl>
-##  1          188 HCT        33.7   132539
-##  2          637 HCT        33.5   132539
-##  3         1987 HCT        30.3   132539
-##  4          637 Platelets 221     132539
-##  5         1987 Platelets 185     132539
-##  6          637 WBC        11.2   132539
-##  7         1987 WBC         9.4   132539
-##  8           71 HCT        24.7   132540
-##  9          146 HCT        28.8   132540
-## 10          300 HCT        28.2   132540
-## # ... with 45,275 more rows
+##  1            7 HR           73   132539
+##  2           37 HR           77   132539
+##  3           97 HR           60   132539
+##  4          157 HR           62   132539
+##  5          217 HR           80   132539
+##  6          277 HR           74   132539
+##  7          337 HR           73   132539
+##  8          457 HR           64   132539
+##  9          517 HR           64   132539
+## 10          577 HR           66   132539
+## # ... with 1,033,015 more rows
 ```
 
 
@@ -253,11 +253,11 @@ glimpse(series_parameters)
 ```
 
 ```
-## Observations: 45,285
+## Observations: 1,033,025
 ## Variables: 4
-## $ Time_Minutes <dbl> 188, 637, 1987, 637, 1987, 637, 1987, 71, 146, 30...
-## $ Parameter    <chr> "HCT", "HCT", "HCT", "Platelets", "Platelets", "W...
-## $ Value        <dbl> 33.7, 33.5, 30.3, 221.0, 185.0, 11.2, 9.4, 24.7, ...
+## $ Time_Minutes <dbl> 7, 37, 97, 157, 217, 277, 337, 457, 517, 577, 637...
+## $ Parameter    <chr> "HR", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "...
+## $ Value        <dbl> 73, 77, 60, 62, 80, 74, 73, 64, 64, 66, 61, 58, 5...
 ## $ RecordID     <dbl> 132539, 132539, 132539, 132539, 132539, 132539, 1...
 ```
 
@@ -314,31 +314,25 @@ data_tidy_corazon = scoresA %>% inner_join(series_summary)
 ```
 
 ```r
+data_tidy_corazon <- subset( data_tidy_corazon, select = -RecordID )
 head(data_tidy_corazon)
 ```
 
 ```
-##   RecordID In_hospital_death AST_mean DiasABP_mean  HR_mean MAP_mean
-## 1   132539                 0       NA           NA 70.81081       NA
-## 2   132540                 0       NA     58.89706 80.79412 76.94030
-## 3   132541                 0    199.5     67.12500 83.75926 90.43750
-## 4   132543                 0     15.0           NA 70.98333       NA
-## 5   132545                 0       NA           NA 74.95833       NA
-## 6   132547                 0    104.5     73.62222 88.53191 88.68889
-##   NIDiasABP_mean NIMAP_mean NISysABP_mean PaCO2_mean PaO2_mean  pH_mean
-## 1       50.14706   71.55912      114.3824         NA        NA       NA
-## 2       56.71429   75.30857      112.5000   38.85714  210.1429 7.395000
-## 3       79.00000   96.75132      132.2632   35.50000  134.5000 7.495000
-## 4       65.05172   83.88552      121.5517         NA        NA       NA
-## 5       45.72093   74.94651      133.3953         NA        NA       NA
-## 6       70.50000   81.98500      105.0000   35.14286  110.0000 7.405714
-##   SysABP_mean
-## 1          NA
-## 2    113.4118
-## 3    125.6875
-## 4          NA
-## 5          NA
-## 6    115.6889
+##   In_hospital_death AST_mean DiasABP_mean  HR_mean MAP_mean NIDiasABP_mean
+## 1                 0       NA           NA 70.81081       NA       50.14706
+## 2                 0       NA     58.89706 80.79412 76.94030       56.71429
+## 3                 0    199.5     67.12500 83.75926 90.43750       79.00000
+## 4                 0     15.0           NA 70.98333       NA       65.05172
+## 5                 0       NA           NA 74.95833       NA       45.72093
+## 6                 0    104.5     73.62222 88.53191 88.68889       70.50000
+##   NIMAP_mean NISysABP_mean PaCO2_mean PaO2_mean  pH_mean SysABP_mean
+## 1   71.55912      114.3824         NA        NA       NA          NA
+## 2   75.30857      112.5000   38.85714  210.1429 7.395000    113.4118
+## 3   96.75132      132.2632   35.50000  134.5000 7.495000    125.6875
+## 4   83.88552      121.5517         NA        NA       NA          NA
+## 5   74.94651      133.3953         NA        NA       NA          NA
+## 6   81.98500      105.0000   35.14286  110.0000 7.405714    115.6889
 ```
 
 ```r
@@ -368,24 +362,25 @@ data_tidy_higado = scoresA %>% inner_join(series_summary)
 ```
 
 ```r
+data_tidy_higado <- subset( data_tidy_higado, select = -RecordID )
 head(data_tidy_higado)
 ```
 
 ```
-##   RecordID In_hospital_death Albumin_mean ALP_mean ALT_mean AST_mean
-## 1   132541                 0          2.5      116     83.0    199.5
-## 2   132543                 0          4.4      105     12.0     15.0
-## 3   132545                 0          3.3       NA       NA       NA
-## 4   132547                 0           NA      101     52.5    104.5
-## 5   132551                 1          1.9       47     46.0     82.0
-## 6   132556                 0          2.7      402     36.0     47.0
-##   Bilirubin_mean Cholesterol_mean
-## 1            2.9               NA
-## 2            0.2               NA
-## 3             NA               NA
-## 4            0.4              212
-## 5            0.3               NA
-## 6            0.1               NA
+##   In_hospital_death Albumin_mean ALP_mean ALT_mean AST_mean Bilirubin_mean
+## 1                 0          2.5      116     83.0    199.5            2.9
+## 2                 0          4.4      105     12.0     15.0            0.2
+## 3                 0          3.3       NA       NA       NA             NA
+## 4                 0           NA      101     52.5    104.5            0.4
+## 5                 1          1.9       47     46.0     82.0            0.3
+## 6                 0          2.7      402     36.0     47.0            0.1
+##   Cholesterol_mean
+## 1               NA
+## 2               NA
+## 3               NA
+## 4              212
+## 5               NA
+## 6               NA
 ```
 
 ```r
@@ -415,17 +410,18 @@ data_tidy_rinon = scoresA %>% inner_join(series_summary)
 ```
 
 ```r
+data_tidy_rinon <- subset( data_tidy_rinon, select = -RecordID )
 head(data_tidy_rinon)
 ```
 
 ```
-##   RecordID In_hospital_death ALP_mean  BUN_mean Creatinine_mean HCO3_mean
-## 1   132539                 0       NA 10.500000       0.7500000  27.00000
-## 2   132540                 0       NA 18.333333       1.1000000  22.33333
-## 3   132541                 0      116  4.666667       0.3333333  25.00000
-## 4   132543                 0      105 17.666667       0.7666667  27.66667
-## 5   132545                 0       NA 35.000000       1.0000000  19.00000
-## 6   132547                 0      101 16.750000       0.9750000  19.75000
+##   In_hospital_death ALP_mean  BUN_mean Creatinine_mean HCO3_mean
+## 1                 0       NA 10.500000       0.7500000  27.00000
+## 2                 0       NA 18.333333       1.1000000  22.33333
+## 3                 0      116  4.666667       0.3333333  25.00000
+## 4                 0      105 17.666667       0.7666667  27.66667
+## 5                 0       NA 35.000000       1.0000000  19.00000
+## 6                 0      101 16.750000       0.9750000  19.75000
 ##   Urine_mean
 ## 1  171.05263
 ## 2  151.56098
@@ -462,17 +458,18 @@ data_tidy_sangre = scoresA %>% inner_join(series_summary)
 ```
 
 ```r
+data_tidy_sangre <- subset( data_tidy_sangre, select = -RecordID )
 head(data_tidy_sangre)
 ```
 
 ```
-##   RecordID In_hospital_death HCT_mean Platelets_mean WBC_mean
-## 1   132539                 0 32.50000      203.00000 10.30000
-## 2   132540                 0 28.65556      178.60000 11.26667
-## 3   132541                 0 28.46000       89.66667  4.70000
-## 4   132543                 0 37.44286      330.00000  9.40000
-## 5   132545                 0 29.55000      103.00000  4.30000
-## 6   132547                 0 37.22500      210.75000 16.10000
+##   In_hospital_death HCT_mean Platelets_mean WBC_mean
+## 1                 0 32.50000      203.00000 10.30000
+## 2                 0 28.65556      178.60000 11.26667
+## 3                 0 28.46000       89.66667  4.70000
+## 4                 0 37.44286      330.00000  9.40000
+## 5                 0 29.55000      103.00000  4.30000
+## 6                 0 37.22500      210.75000 16.10000
 ```
 
 ```r
@@ -487,81 +484,131 @@ nrow(data_tidy_sangre)
 
 
 ```r
-PercentageNA(data_tidy_corazon)
+NA_corazon <- PercentageNA(data_tidy_corazon)
+NA_higado <- PercentageNA(data_tidy_higado)
+NA_rinon <- PercentageNA(data_tidy_rinon)
+NA_sangre <- PercentageNA(data_tidy_sangre)
 ```
 
-```
-##                           na
-## RecordID          0.00000000
-## In_hospital_death 0.00000000
-## AST_mean          0.56636501
-## DiasABP_mean      0.29638009
-## HR_mean           0.01030669
-## MAP_mean          0.29813977
-## NIDiasABP_mean    0.12443439
-## NIMAP_mean        0.12493715
-## NISysABP_mean     0.12192056
-## PaCO2_mean        0.24007039
-## PaO2_mean         0.24007039
-## pH_mean           0.23579688
-## SysABP_mean       0.29638009
-```
+
+#### Gráfica de NA's según el órgano
 
 ```r
-PercentageNA(data_tidy_higado)
+NA_Plot_Corazon <-  ggplot(data=NA_corazon, aes(x=rownames(NA_corazon), y=NA_corazon$na * 100, fill=rownames(NA_corazon))) + 
+                    geom_bar(stat="identity", position="stack") +
+                    ggtitle("Corazón", "Porcentaje de NA's en sus variables.") +
+                    labs(x = "Variables relacionadas", y = "Porcentaje de NA (%)") + 
+                    theme (axis.text.x = element_text(size=rel(0.65)))
+
+NA_Plot_Higado  <-  ggplot(data=NA_higado, aes(x=rownames(NA_higado), y=NA_higado$na * 100, fill=rownames(NA_higado))) + 
+                    geom_bar(stat="identity", position="stack") +
+                    ggtitle("Higado", "Porcentaje de NA's en sus variables.") +
+                    labs(x = "Variables relacionadas", y = "Porcentaje de NA (%)") + 
+                    theme (axis.text.x = element_text(size=rel(0.65)))
+
+NA_Plot_Rinon   <-  ggplot(data=NA_rinon, aes(x=rownames(NA_rinon), y=NA_rinon$na * 100, fill=rownames(NA_rinon))) + 
+                    geom_bar(stat="identity", position="stack") +
+                    ggtitle("Riñón", "Porcentaje de NA's en sus variables.") +
+                    labs(x = "Variables relacionadas", y = "Porcentaje de NA (%)") + 
+                    theme (axis.text.x = element_text(size=rel(0.65)))
+
+NA_Plot_Sangre  <-  ggplot(data=NA_sangre, aes(x=rownames(NA_sangre), y=NA_sangre$na * 100, fill=rownames(NA_sangre))) + 
+                    geom_bar(stat="identity", position="stack") +
+                    ggtitle("Sangre", "Porcentaje de NA's en sus variables.") +
+                    labs(x = "Variables relacionadas", y = "Porcentaje de NA (%)") + 
+                    theme (axis.text.x = element_text(size=rel(0.65)))
+NA_Plot_Corazon
 ```
 
-```
-##                          na
-## RecordID          0.0000000
-## In_hospital_death 0.0000000
-## Albumin_mean      0.2540416
-## ALP_mean          0.2193995
-## ALT_mean          0.2050808
-## AST_mean          0.2032333
-## Bilirubin_mean    0.2064665
-## Cholesterol_mean  0.8591224
-```
-
-```r
-PercentageNA(data_tidy_rinon)
-```
-
-```
-##                           na
-## RecordID          0.00000000
-## In_hospital_death 0.00000000
-## ALP_mean          0.57697121
-## BUN_mean          0.01476846
-## Creatinine_mean   0.01476846
-## HCO3_mean         0.01777222
-## Urine_mean        0.02803504
-```
+![](proyecto_final_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
 
 ```r
-PercentageNA(data_tidy_sangre)
+NA_Plot_Higado
 ```
 
+![](proyecto_final_files/figure-html/unnamed-chunk-12-2.png)<!-- -->
+
+```r
+NA_Plot_Rinon
 ```
-##                             na
-## RecordID          0.0000000000
-## In_hospital_death 0.0000000000
-## HCT_mean          0.0002540005
-## Platelets_mean    0.0012700025
-## WBC_mean          0.0025400051
+
+![](proyecto_final_files/figure-html/unnamed-chunk-12-3.png)<!-- -->
+
+```r
+NA_Plot_Sangre
 ```
+
+![](proyecto_final_files/figure-html/unnamed-chunk-12-4.png)<!-- -->
+
+#### ¿Qué variables deberíamos mantener?
+
+Tras realizar el cálculo de valores no asignados de cada variables según el órgano podemos detectar aquellas variables que tienen un alto porcentaje de NA's. Con tal de conseguir unos datos lo más fidedignos posibles hemos decidido eliminar aquellas variables cuyo porcentaje de NA's superase el 30%.
+Así pues, las variables resultantes de cada órgano son:
+
+
+**Corazón**
+
+- DiasABP_mean.
+- HR_mean.
+- MAP_mean.
+- NIDiasABP_mean.
+- NIMAP_mean.
+- NISysABP_mean.
+- PaCO2_mean.
+- PaO2_mean.
+- pH_mean.
+- SysABP_mean.
+
+
+**Higado**
+
+- Albumin_mean.
+- ALP_mean.
+- ALT_mean.
+- AST_mean.
+- Billirubin
+
+
+**Riñón**
+
+- BUN.
+- Creatinine.
+- HCO3.
+- Urine.
+
+
+**Sangre**:
+
+- HCT.
+- Platelets.
+- WBC.
+
+
+*En todas ellas se presupone la conservación de la variable RecordID y la variable a predecir in_hospital_death.*
+
+
+### Selección de variables a utilizar
+
+En las siguientes instrucciones se procede a retirar las variables que en el anterior apartada hemos visto que sobrepasan nuestro límite de NA's para cada órgano. Además, para el resto de variables que se mantienen en los distintos *datasets* se ha decidido sustituir los valores no asignados restantes por la media, de esta manera podemos seguir computando resultados sin tener que prescindir de demasiados registros.
 
 
 ```r
+data_tidy_corazon <- select(data_tidy_corazon, -AST_mean)
 for(i in 1:ncol(data_tidy_corazon)){
   data_tidy_corazon[is.na(data_tidy_corazon[,i]), i] <- mean(data_tidy_corazon[,i], na.rm = TRUE)
 }
+
+data_tidy_higado <- select(data_tidy_higado, -Cholesterol_mean)
 for(i in 1:ncol(data_tidy_higado)){
   data_tidy_higado[is.na(data_tidy_higado[,i]), i] <- mean(data_tidy_higado[,i], na.rm = TRUE)
 }
+
+data_tidy_rinon <- select(data_tidy_rinon, -ALP_mean)
 for(i in 1:ncol(data_tidy_rinon)){
   data_tidy_rinon[is.na(data_tidy_rinon[,i]), i] <- mean(data_tidy_rinon[,i], na.rm = TRUE)
 }
+
+# No se elimina ninguna variable
 for(i in 1:ncol(data_tidy_sangre)){
   data_tidy_sangre[is.na(data_tidy_sangre[,i]), i] <- mean(data_tidy_sangre[,i], na.rm = TRUE)
 }
@@ -571,9 +618,7 @@ PercentageNA(data_tidy_corazon)
 
 ```
 ##                   na
-## RecordID           0
 ## In_hospital_death  0
-## AST_mean           0
 ## DiasABP_mean       0
 ## HR_mean            0
 ## MAP_mean           0
@@ -592,14 +637,12 @@ PercentageNA(data_tidy_higado)
 
 ```
 ##                   na
-## RecordID           0
 ## In_hospital_death  0
 ## Albumin_mean       0
 ## ALP_mean           0
 ## ALT_mean           0
 ## AST_mean           0
 ## Bilirubin_mean     0
-## Cholesterol_mean   0
 ```
 
 ```r
@@ -608,9 +651,7 @@ PercentageNA(data_tidy_rinon)
 
 ```
 ##                   na
-## RecordID           0
 ## In_hospital_death  0
-## ALP_mean           0
 ## BUN_mean           0
 ## Creatinine_mean    0
 ## HCO3_mean          0
@@ -623,12 +664,123 @@ PercentageNA(data_tidy_sangre)
 
 ```
 ##                   na
-## RecordID           0
 ## In_hospital_death  0
 ## HCT_mean           0
 ## Platelets_mean     0
 ## WBC_mean           0
 ```
+
+# Primeras predicciones
+
+En primer lugar, trataremos de realizar unas predicciones no muy sofisticadas haciendo uso de un modelo clasificador de red neuronal.
+
+Haremos uso de la siguiente función para extraer las distintas métricas de cada modelo.
+
+```r
+metrics = function(neural_net, data_test, all_metrics = TRUE){
+  pred <- predict(neural_net, data_test)
+  
+  conf_Matrix <- table(prediction = round(pred), actual = data_test$In_hospital_death)
+  
+  accuracy <- sum(diag(conf_Matrix))/sum(conf_Matrix)
+  cat(sprintf("Accuracy: %f", accuracy))
+  
+  precision <- conf_Matrix[1,1]/sum(conf_Matrix[1,])
+  cat(sprintf("\nPrecision: %f", precision))
+  
+  recall <- conf_Matrix[1,1]/sum(conf_Matrix[,1])
+  cat(sprintf("\nRecall: %f", recall))
+  
+  if(all_metrics == TRUE){
+    specificity <- conf_Matrix[2,2]/sum(conf_Matrix[,2])
+    cat(sprintf("\nSpecificity: %f", specificity))
+  }
+}
+```
+
+## División de los datasets en Training y Test, y normalización de los datos.
+
+**CORAZÓN**
+
+```r
+set.seed(101)
+
+data_norm_corazon <- as.data.frame(apply(data_tidy_corazon[, 1:11], 2, function(x) (x - min(x))/(max(x)-min(x))))
+
+split_idx <- sample(seq_len(nrow(data_tidy_corazon)), size = 0.67*nrow(data_tidy_corazon))
+data_tidy_corazon.train_set <- data_tidy_corazon[split_idx,]
+data_tidy_corazon.test_set <- data_tidy_corazon[-split_idx,]
+
+split_idx <- sample(seq_len(nrow(data_norm_corazon)), size = 0.67*nrow(data_tidy_corazon))
+data_norm_corazon.train_set <- data_norm_corazon[split_idx,]
+data_norm_corazon.test_set <- data_norm_corazon[-split_idx,]
+```
+**HÍGADO**
+
+```r
+data_norm_higado <- as.data.frame(apply(data_tidy_higado[, 1:6], 2, function(x) (x - min(x))/(max(x)-min(x))))
+
+split_idx <- sample(seq_len(nrow(data_tidy_higado)), size = 0.67*nrow(data_tidy_higado))
+data_tidy_higado.train_set <- data_tidy_higado[split_idx,]
+data_tidy_higado.test_set <- data_tidy_higado[-split_idx,]
+
+split_idx <- sample(seq_len(nrow(data_norm_higado)), size = 0.67*nrow(data_tidy_higado))
+data_norm_higado.train_set <- data_norm_higado[split_idx,]
+data_norm_higado.test_set <- data_norm_higado[-split_idx,]
+```
+**RIÑÓN**
+
+```r
+data_norm_rinon <- as.data.frame(apply(data_tidy_rinon[, 1:5], 2, function(x) (x - min(x))/(max(x)-min(x))))
+
+split_idx <- sample(seq_len(nrow(data_tidy_rinon)), size = 0.67*nrow(data_tidy_rinon))
+data_tidy_rinon.train_set <- data_tidy_rinon[split_idx,]
+data_tidy_rinon.test_set <- data_tidy_rinon[-split_idx,]
+
+split_idx <- sample(seq_len(nrow(data_norm_rinon)), size = 0.67*nrow(data_tidy_rinon))
+data_norm_rinon.train_set <- data_norm_rinon[split_idx,]
+data_norm_rinon.test_set <- data_norm_rinon[-split_idx,]
+```
+**SANGRE**
+
+```r
+data_norm_sangre <- as.data.frame(apply(data_tidy_sangre[, 1:4], 2, function(x) (x - min(x))/(max(x)-min(x))))
+
+split_idx <- sample(seq_len(nrow(data_tidy_sangre)), size = 0.67*nrow(data_tidy_sangre))
+data_tidy_sangre.train_set <- data_tidy_sangre[split_idx,]
+data_tidy_sangre.test_set <- data_tidy_sangre[-split_idx,]
+
+split_idx <- sample(seq_len(nrow(data_norm_sangre)), size = 0.67*nrow(data_norm_sangre))
+data_norm_sangre.train_set <- data_norm_sangre[split_idx,]
+data_norm_sangre.test_set <- data_norm_sangre[-split_idx,]
+```
+
+
+
+```r
+nn_sangre <- neuralnet("In_hospital_death ~ HCT_mean + Platelets_mean + WBC_mean", 
+                         data = data_norm_sangre.train_set,
+                         hidden = c(8,4,4,2),
+                         algorithm = "backprop",
+                         linear.output = FALSE, # FALSE: Classification TRUE: Regression
+                         err.fct = "sse", #Error Function 
+                         act.fct = "logistic",
+                         learningrate = 0.01
+                         ) #Activation Function
+```
+
+
+```r
+metrics(nn_sangre, data_norm_sangre.test_set, FALSE)
+```
+
+```
+## Accuracy: 0.868462
+## Precision: 0.868462
+## Recall: 1.000000
+```
+
+
 
 # Conclusión
 

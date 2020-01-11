@@ -222,6 +222,7 @@ series_summary=series_corazon %>%
 
 data_tidy_corazon = scoresA %>% inner_join(series_summary)
 
+data_tidy_corazon <- subset( data_tidy_corazon, select = -RecordID )
 head(data_tidy_corazon)
 nrow(data_tidy_corazon)
 ```
@@ -238,6 +239,7 @@ series_summary=series_higado %>%
 
 data_tidy_higado = scoresA %>% inner_join(series_summary)
 
+data_tidy_higado <- subset( data_tidy_higado, select = -RecordID )
 head(data_tidy_higado)
 nrow(data_tidy_higado)
 ```
@@ -254,6 +256,7 @@ series_summary=series_rinon %>%
 
 data_tidy_rinon = scoresA %>% inner_join(series_summary)
 
+data_tidy_rinon <- subset( data_tidy_rinon, select = -RecordID )
 head(data_tidy_rinon)
 nrow(data_tidy_rinon)
 ```
@@ -270,6 +273,7 @@ series_summary=series_sangre %>%
 
 data_tidy_sangre = scoresA %>% inner_join(series_summary)
 
+data_tidy_sangre <- subset( data_tidy_sangre, select = -RecordID )
 head(data_tidy_sangre)
 nrow(data_tidy_sangre)
 ```
@@ -421,20 +425,64 @@ metrics = function(neural_net, data_test, all_metrics = TRUE){
 }
 ```
 
-## División de los datasets en Training y Test.
+## División de los datasets en Training y Test, y normalización de los datos.
 
-**POR AHORA SOLO SE HA DIVIDIDO EL CORAZON**
+**CORAZÓN**
 ```{r}
 set.seed(101)
+
+data_norm_corazon <- as.data.frame(apply(data_tidy_corazon[, 1:11], 2, function(x) (x - min(x))/(max(x)-min(x))))
+
 split_idx <- sample(seq_len(nrow(data_tidy_corazon)), size = 0.67*nrow(data_tidy_corazon))
 data_tidy_corazon.train_set <- data_tidy_corazon[split_idx,]
 data_tidy_corazon.test_set <- data_tidy_corazon[-split_idx,]
+
+split_idx <- sample(seq_len(nrow(data_norm_corazon)), size = 0.67*nrow(data_tidy_corazon))
+data_norm_corazon.train_set <- data_norm_corazon[split_idx,]
+data_norm_corazon.test_set <- data_norm_corazon[-split_idx,]
+```
+**HÍGADO**
+```{r}
+data_norm_higado <- as.data.frame(apply(data_tidy_higado[, 1:6], 2, function(x) (x - min(x))/(max(x)-min(x))))
+
+split_idx <- sample(seq_len(nrow(data_tidy_higado)), size = 0.67*nrow(data_tidy_higado))
+data_tidy_higado.train_set <- data_tidy_higado[split_idx,]
+data_tidy_higado.test_set <- data_tidy_higado[-split_idx,]
+
+split_idx <- sample(seq_len(nrow(data_norm_higado)), size = 0.67*nrow(data_tidy_higado))
+data_norm_higado.train_set <- data_norm_higado[split_idx,]
+data_norm_higado.test_set <- data_norm_higado[-split_idx,]
+```
+**RIÑÓN**
+```{r}
+data_norm_rinon <- as.data.frame(apply(data_tidy_rinon[, 1:5], 2, function(x) (x - min(x))/(max(x)-min(x))))
+
+split_idx <- sample(seq_len(nrow(data_tidy_rinon)), size = 0.67*nrow(data_tidy_rinon))
+data_tidy_rinon.train_set <- data_tidy_rinon[split_idx,]
+data_tidy_rinon.test_set <- data_tidy_rinon[-split_idx,]
+
+split_idx <- sample(seq_len(nrow(data_norm_rinon)), size = 0.67*nrow(data_tidy_rinon))
+data_norm_rinon.train_set <- data_norm_rinon[split_idx,]
+data_norm_rinon.test_set <- data_norm_rinon[-split_idx,]
+```
+**SANGRE**
+```{r}
+data_norm_sangre <- as.data.frame(apply(data_tidy_sangre[, 1:4], 2, function(x) (x - min(x))/(max(x)-min(x))))
+
+split_idx <- sample(seq_len(nrow(data_tidy_sangre)), size = 0.67*nrow(data_tidy_sangre))
+data_tidy_sangre.train_set <- data_tidy_sangre[split_idx,]
+data_tidy_sangre.test_set <- data_tidy_sangre[-split_idx,]
+
+split_idx <- sample(seq_len(nrow(data_norm_sangre)), size = 0.67*nrow(data_norm_sangre))
+data_norm_sangre.train_set <- data_norm_sangre[split_idx,]
+data_norm_sangre.test_set <- data_norm_sangre[-split_idx,]
+
 ```
 
 
 ```{r}
-nn_corazon <- neuralnet("In_hospital_death ~ DiasABP_mean + HR_mean + MAP_mean + NIDiasABP_mean + NIMAP_mean + NISysABP_mean + PaCO2_mean + PaO2_mean + pH_mean + SysABP_mean", 
-                         data = data_tidy_corazon.train_set,
+nn_sangre <- neuralnet("In_hospital_death ~ HCT_mean + Platelets_mean + WBC_mean", 
+                         data = data_norm_sangre.train_set,
                          hidden = c(8,4,4,2),
                          algorithm = "backprop",
                          linear.output = FALSE, # FALSE: Classification TRUE: Regression
@@ -442,12 +490,12 @@ nn_corazon <- neuralnet("In_hospital_death ~ DiasABP_mean + HR_mean + MAP_mean +
                          act.fct = "logistic",
                          learningrate = 0.01
                          ) #Activation Function
-cat(sprintf("Best error reached: %f", nn_corazon$result.matrix[c('error'), ]))
 ```
 
 ```{r}
-metrics(nn_corazon, data_tidy_corazon.test_set, FALSE)
+metrics(nn_sangre, data_norm_sangre.test_set, FALSE)
 ```
+
 
 
 # Conclusión

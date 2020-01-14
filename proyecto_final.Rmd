@@ -33,8 +33,6 @@ Resto de años mas recientes
 * https://physionet.org/content/challenge-2018/
 * https://physionet.org/content/challenge-2019/
 
-
-
 ##   Enlaces de interés
 
 [**HR**: Heart Rate bpm beats per minut](https://en.wikipedia.org/wiki/Heart_rate)
@@ -49,9 +47,6 @@ Resto de años mas recientes
 Con los datos que disponemos, se puede predecir "la muerte en hospital" (in hospital death) de muchas formas. Pero en nuestro caso se ha decidio hacer algo un tanto distinto. Se intentará averiguar la influencia de los distintos órganos relacionados con nuestras variables con el fallecimiento en el hospital. Es decir, se tratará de definir en que medida los problemas derivados de un órgano en concreto se encuentran relacionadas con la muerte en hospital.
 
 Para ello, se clasificarán las variables en grupos según al órgano al que pertenezcan. Una vez se tengan los grupos, se escogerá el modelo adecuado y se predecirá la variable "muerte en hospital" con cada grupo de variables. El grupo con mayor porcentaje de aciertos será el órgano que tenga más probabilidades de ser un órgano crítico.
-
-
-# Ingesta de datos
 
 Después de hacer un ejercicio de investigación, se han detectado 5 grupos de variables, y por tanto 5 órganos, mayoritarios:
 
@@ -101,7 +96,8 @@ Después de hacer un ejercicio de investigación, se han detectado 5 grupos de v
 
 Las variables restantes que no aparecen entre estos grupos han sido inicialmente descartadas debido a que no ha sido posible asociarles algún órgano en concreto o que el grupo formado ha sido realmente minoritario. No se descarta que durante el transcurso del desarrollo del proyecto se utilice alguna de ellas para reforzar los sistemas según los resultados de estos.
 
-Además, de las variables descritas no se van a utilizar muchas de ellas debido a la ausencia de estas en muchos pacientes. Para determinar el porcentaje de valores NAs de cada variable se ha utilizado una pequeño función.
+Además, de las variables descritas no se van a utilizar muchas de ellas debido a la ausencia de estas en muchos pacientes. 
+Para determinar el porcentaje de valores NAs de cada variable se ha utilizado una pequeña función.
 
 ## Funcion de cálculo de valores no asignados (NAs)
 ```{r}
@@ -118,9 +114,9 @@ PercentageNA <- function(df){
 
 # Modelo de datos 
 
-Con tal de recoger los datos, se utilizará el código que nos facilitó el profesor Ricardo.
+Para la recogida de datos, se ha desarrollado un código basado en la forma que el profesor Ricardo nos facilitó.
 
-La idea es generar tantos datasets como órganos queramos comparar. Todavía no se ha llegado a completar toda la ingesta de datos, pero la idea es utilizar un método similar al que planteó Ricardo. A continuación se muestra el código del profesor modificado para generar un dataset con las variables relacionadas con la sangre.
+Como lo que se desea es comparar orgános, se van a generar tantos dataframes como órganos se quieran comparar.
 
 ```{r}
 path="data_basic_physionet/set-a/"# path training
@@ -128,7 +124,11 @@ lista_pacientes_set_a=dir(path) # lista  ficheros pacientes
 length(lista_pacientes_set_a) # número pacientes en training
 ```
 
-## Carga set_a
+## Carga de datos
+
+En lo referente a la fuente de datos, se ha decidido que se va a utilizar el set-a (training) para realizar todo el estudio. Eso conlleva que al aplicar modelos sobre estos datos, se tendrá que dividir los datos en un set de training y un set de test.
+
+Debido a que solo nos interesa recoger datos relacionados con los órganos, los datos de perfil de los pacientes serán totalmente omitidos. Además, de los scores solo se utilizará la variable a predecir que será el In_Hospital_Death.
 
 ```{r cache=TRUE }
 # lista path's  a cada  ficjero de paciente
@@ -143,83 +143,48 @@ leer_paciente=function(file) {
     select(Time_Minutes,Parameter,Value)
 }
 
-#leer_paciente(list_files[1])
-
 raw_data=lapply(list_files,leer_paciente)# lista de los datos por paciente
 
-#extraer perfiles "RecordID" "Age"      "Gender"   "Height"   "Weight"   "ICUType" 
-perfil=function(data_paciente){
-  data_paciente %>% filter(Parameter %in% c("RecordID", "Age", "Gender", "Height", "ICUType", "Weight")) %>% select(-Time_Minutes) %>% distinct(Parameter,.keep_all=TRUE) %>% spread(Parameter,Value)
-}
-## ejemplo
-#perfil(data_paciente_132539)
-## Guardo  todos los datos  del perfil de cada paciente
-perfiles=lapply(raw_data,perfil)%>% bind_rows() %>% select(RecordID, Age, Gender, Height,Weight,ICUType)
-glimpse(perfiles)
-## Ler series
-## se modifica error de time
 
 serie_UCI_parameter<-  function(paciente,parameters){
   paciente %>% arrange(Parameter,Time_Minutes) %>% filter(Parameter %in% parameters) %>% add_column(RecordID=paciente[1,3]$Value) 
-  } 
+} 
 
-##ejemplo
-#parameters = c("FiO2","RespRate","SaO2")
-
+# Parámetros por órgano
 parameters_corazon = c("AST","DiasABP","HR","MAP","NIDiasABP","NIMAP","NISysABP","PaCO2","PaO2","pH","SysABP","TropT")
 parameters_higado = c("Albumin","ALP","ALT","AST","Bilirubin","Cholesterol")
 parameters_rinon = c("ALP","BUN","Creatinine","HCO3","Urine")
 parameters_sangre = c("HCT","Platelets","WBC")
-#parameters_pulmon = c("FiO2","RespRate","SaO2")
+parameters_pulmon = c("FiO2","RespRate","SaO2")
 
 parameters = parameters_corazon
 
 serie_paciente1 =serie_UCI_parameter(raw_data[[1]],parameters)
-# paso parámetros y  apilo 
+
 series_corazon = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_corazon)) %>% bind_rows()
 series_higado = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_higado)) %>% bind_rows()
 series_rinon = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_rinon)) %>% bind_rows()
 series_sangre = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_sangre)) %>% bind_rows()
-#series_pulmon = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_pulmon)) %>% bind_rows()
+series_pulmon = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_pulmon)) %>% bind_rows()
 
-series_parameters = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters)) %>% bind_rows()
-```
-
-## En resumen  tenemos
-```{r, echo=FALSE}
-#set-a
-perfiles
-series_parameters
-```
-
-```{r}
-#set-a
-glimpse(perfiles)
-glimpse(series_parameters)
-```
-
-## Unificar: series, perfiles y scores
-
-Nos faltan los scores clásicos que se utilizan eb las ICU. Estos ewstán el fichero Outcome-a.txt para el set-a
-
-```{r}
 scoresApath="data_basic_physionet/Outcomes-a.txt"
 scoresA=read_csv(scoresApath)
 scoresA = data.frame("RecordID" = scoresA$RecordID, "In_hospital_death" = scoresA$`In-hospital_death`)
-##glimpse(scoresA)
-#Scores_perfilesA= inner_join(perfiles,scoresA,"RecordID")
-#glimpse(Scores_perfilesA)
 ```
+### Formación de dataframes
 
-### Extracción factores de las series 
+Una vez se han leído todos los datos, se empezarán a generar los dataframes de cada órgano.
 
-Se genera una tabla con resumenes de  las variables por paciente: media, desviación típica 
-* https://rsanchezs.gitbooks.io/rprogramming/content/chapter9/summarise.html
+Es en esta parte donde se han de elegir las variables que se utilizarán en el estudio. En este caso, se ha decidido que se utilizará la media de las variables de cada órgano porque se cree que es lo que más valor puede aportar al estudio.
+
+Además, se ha realizado un estudio previo donde se han hecho pruebas cogiendo el corazón como ejemplo y cogiendo la media, el valor mínimo y el valor máximo de cada una de sus variables. Pero los resultados del estudio previo comparado con los que hemos obtenido en este estudio son parecidos o incluso un poco peores.
+
+**Corazón**
 
 ```{r}
   series_summary=series_corazon %>%
   group_by(RecordID,Parameter) %>%
-  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE))%>%
+  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE), max = max(Value, na.rm = TRUE))%>%
   summarise(mean=mean(Value,na.rm=TRUE))%>%
   gather(Stat, Value, mean:mean) %>%
   ungroup() %>%
@@ -233,11 +198,11 @@ head(data_tidy_corazon)
 nrow(data_tidy_corazon)
 ggcorr(data_tidy_corazon, label = TRUE, label_size = 3, label_round = 3)
 ```
-
+**Hígado**
 ```{r}
 series_summary=series_higado %>%
   group_by(RecordID,Parameter) %>%
-  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE))%>%
+  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE), max = max(Value, na.rm = TRUE))%>%
   summarise(mean=mean(Value,na.rm=TRUE))%>%
   gather(Stat, Value, mean:mean) %>%
   ungroup() %>%
@@ -251,11 +216,11 @@ head(data_tidy_higado)
 nrow(data_tidy_higado)
 ggcorr(data_tidy_higado, label = TRUE, label_size = 3, label_round = 3)
 ```
-
+**Riñón**
 ```{r}
 series_summary=series_rinon %>%
   group_by(RecordID,Parameter) %>%
-  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE))%>%
+  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE), max = max(Value, na.rm = TRUE))%>%
   summarise(mean=mean(Value,na.rm=TRUE))%>%
   gather(Stat, Value, mean:mean) %>%
   ungroup() %>%
@@ -269,11 +234,11 @@ head(data_tidy_rinon)
 nrow(data_tidy_rinon)
 ggcorr(data_tidy_rinon, label = TRUE, label_size = 3, label_round = 3)
 ```
-
+**Sangre**
 ```{r}
 series_summary=series_sangre %>%
   group_by(RecordID,Parameter) %>%
-  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE))%>%
+  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE), max = max(Value, na.rm = TRUE))%>%
   summarise(mean=mean(Value,na.rm=TRUE))%>%
   gather(Stat, Value, mean:mean) %>%
   ungroup() %>%
@@ -287,6 +252,26 @@ head(data_tidy_sangre)
 nrow(data_tidy_sangre)
 ggcorr(data_tidy_sangre, label = TRUE, label_size = 3, label_round = 3)
 ```
+**Pulmón**
+```{r}
+series_summary=series_pulmon %>%
+  group_by(RecordID,Parameter) %>%
+  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE), max = max(Value, na.rm = TRUE))%>%
+  summarise(mean=mean(Value,na.rm=TRUE))%>%
+  gather(Stat, Value, mean:mean) %>%
+  ungroup() %>%
+  transmute(RecordID, ParameterStat=paste0(Parameter,"_",Stat), Value) %>%
+  spread(ParameterStat, Value)
+
+data_tidy_pulmon = scoresA %>% inner_join(series_summary)
+
+data_tidy_pulmon <- subset( data_tidy_pulmon, select = -RecordID )
+head(data_tidy_pulmon)
+nrow(data_tidy_pulmon)
+ggcorr(data_tidy_pulmon, label = TRUE, label_size = 3, label_round = 3)
+```
+
+Viendo las matrices de correlación, no parece que hayan muchas variables que tengan una fuerte relación con In_hospital_death. Los órganos que parecen tener más impacto parecen ser el hígado y el riñón.
 
 ### Porcentaje NAs
 
@@ -295,11 +280,13 @@ NA_corazon <- PercentageNA(data_tidy_corazon)
 NA_higado <- PercentageNA(data_tidy_higado)
 NA_rinon <- PercentageNA(data_tidy_rinon)
 NA_sangre <- PercentageNA(data_tidy_sangre)
+NA_pulmon <- PercentageNA(data_tidy_pulmon)
 
 NA_corazon
 NA_higado
 NA_rinon
 NA_sangre
+NA_pulmon
 ```
 
 
@@ -313,7 +300,7 @@ NA_Plot_Corazon <-  ggplot(data=NA_corazon, aes(x=rownames(NA_corazon), y=NA_cor
 
 NA_Plot_Higado  <-  ggplot(data=NA_higado, aes(x=rownames(NA_higado), y=NA_higado$na * 100, fill=rownames(NA_higado))) + 
                     geom_bar(stat="identity", position="stack") +
-                    ggtitle("Higado", "Porcentaje de NA's en sus variables.") +
+                    ggtitle("Hígado", "Porcentaje de NA's en sus variables.") +
                     labs(x = "Variables relacionadas", y = "Porcentaje de NA (%)") + 
                     theme (axis.text.x = element_text(size=rel(0.65)))
 
@@ -328,10 +315,17 @@ NA_Plot_Sangre  <-  ggplot(data=NA_sangre, aes(x=rownames(NA_sangre), y=NA_sangr
                     ggtitle("Sangre", "Porcentaje de NA's en sus variables.") +
                     labs(x = "Variables relacionadas", y = "Porcentaje de NA (%)") + 
                     theme (axis.text.x = element_text(size=rel(0.65)))
+
+NA_Plot_Pulmon  <-  ggplot(data=NA_pulmon, aes(x=rownames(NA_pulmon), y=NA_pulmon$na * 100, fill=rownames(NA_pulmon))) + 
+                    geom_bar(stat="identity", position="stack") +
+                    ggtitle("Pulmón", "Porcentaje de NA's en sus variables.") +
+                    labs(x = "Variables relacionadas", y = "Porcentaje de NA (%)") + 
+                    theme (axis.text.x = element_text(size=rel(0.65)))
 NA_Plot_Corazon
 NA_Plot_Higado
 NA_Plot_Rinon
 NA_Plot_Sangre
+NA_Plot_Pulmon
 ```
 
 #### ¿Qué variables deberíamos mantener?
@@ -377,18 +371,12 @@ Así pues, las variables resultantes de cada órgano son:
 
 *En todas ellas se presupone la conservación de la variable a predecir in_hospital_death.*
 
+Como la única variabel relacionada con el pulmón que estaba por debajo del umbral que se ha definido es **Fi02**, se ha decidido eliminar el pulmón del estudio, debido a que tener un órgano con solo una variables no es relevante.
+
 
 ### Selección de variables a utilizar
 
 En las siguientes instrucciones se procede a retirar las variables que en el anterior apartada hemos visto que sobrepasan nuestro límite de NA's para cada órgano. Además, para el resto de variables que se mantienen en los distintos *datasets* se ha decidido sustituir los valores no asignados restantes por la media, de esta manera podemos seguir computando resultados sin tener que prescindir de demasiados registros.
-
-
-eliminadas corazon:
-
-- AST_mean
-- DiasABP_mean.
-- MAP_mean.
-- SysABP_mean.
 
 ```{r}
 

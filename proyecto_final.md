@@ -23,8 +23,6 @@ Resto de años mas recientes
 * https://physionet.org/content/challenge-2018/
 * https://physionet.org/content/challenge-2019/
 
-
-
 ##   Enlaces de interés
 
 [**HR**: Heart Rate bpm beats per minut](https://en.wikipedia.org/wiki/Heart_rate)
@@ -39,9 +37,6 @@ Resto de años mas recientes
 Con los datos que disponemos, se puede predecir "la muerte en hospital" (in hospital death) de muchas formas. Pero en nuestro caso se ha decidio hacer algo un tanto distinto. Se intentará averiguar la influencia de los distintos órganos relacionados con nuestras variables con el fallecimiento en el hospital. Es decir, se tratará de definir en que medida los problemas derivados de un órgano en concreto se encuentran relacionadas con la muerte en hospital.
 
 Para ello, se clasificarán las variables en grupos según al órgano al que pertenezcan. Una vez se tengan los grupos, se escogerá el modelo adecuado y se predecirá la variable "muerte en hospital" con cada grupo de variables. El grupo con mayor porcentaje de aciertos será el órgano que tenga más probabilidades de ser un órgano crítico.
-
-
-# Ingesta de datos
 
 Después de hacer un ejercicio de investigación, se han detectado 5 grupos de variables, y por tanto 5 órganos, mayoritarios:
 
@@ -91,7 +86,8 @@ Después de hacer un ejercicio de investigación, se han detectado 5 grupos de v
 
 Las variables restantes que no aparecen entre estos grupos han sido inicialmente descartadas debido a que no ha sido posible asociarles algún órgano en concreto o que el grupo formado ha sido realmente minoritario. No se descarta que durante el transcurso del desarrollo del proyecto se utilice alguna de ellas para reforzar los sistemas según los resultados de estos.
 
-Además, de las variables descritas no se van a utilizar muchas de ellas debido a la ausencia de estas en muchos pacientes. Para determinar el porcentaje de valores NAs de cada variable se ha utilizado una pequeño función.
+Además, de las variables descritas no se van a utilizar muchas de ellas debido a la ausencia de estas en muchos pacientes. 
+Para determinar el porcentaje de valores NAs de cada variable se ha utilizado una pequeña función.
 
 ## Funcion de cálculo de valores no asignados (NAs)
 
@@ -109,9 +105,9 @@ PercentageNA <- function(df){
 
 # Modelo de datos 
 
-Con tal de recoger los datos, se utilizará el código que nos facilitó el profesor Ricardo.
+Para la recogida de datos, se ha desarrollado un código basado en la forma que el profesor Ricardo nos facilitó.
 
-La idea es generar tantos datasets como órganos queramos comparar. Todavía no se ha llegado a completar toda la ingesta de datos, pero la idea es utilizar un método similar al que planteó Ricardo. A continuación se muestra el código del profesor modificado para generar un dataset con las variables relacionadas con la sangre.
+Como lo que se desea es comparar orgános, se van a generar tantos dataframes como órganos se quieran comparar.
 
 
 ```r
@@ -124,7 +120,11 @@ length(lista_pacientes_set_a) # número pacientes en training
 ## [1] 4000
 ```
 
-## Carga set_a
+## Carga de datos
+
+En lo referente a la fuente de datos, se ha decidido que se va a utilizar el set-a (training) para realizar todo el estudio. Eso conlleva que al aplicar modelos sobre estos datos, se tendrá que dividir los datos en un set de training y un set de test.
+
+Debido a que solo nos interesa recoger datos relacionados con los órganos, los datos de perfil de los pacientes serán totalmente omitidos. Además, de los scores solo se utilizará la variable a predecir que será el In_Hospital_Death.
 
 
 ```r
@@ -140,134 +140,30 @@ leer_paciente=function(file) {
     select(Time_Minutes,Parameter,Value)
 }
 
-#leer_paciente(list_files[1])
-
 raw_data=lapply(list_files,leer_paciente)# lista de los datos por paciente
 
-#extraer perfiles "RecordID" "Age"      "Gender"   "Height"   "Weight"   "ICUType" 
-perfil=function(data_paciente){
-  data_paciente %>% filter(Parameter %in% c("RecordID", "Age", "Gender", "Height", "ICUType", "Weight")) %>% select(-Time_Minutes) %>% distinct(Parameter,.keep_all=TRUE) %>% spread(Parameter,Value)
-}
-## ejemplo
-#perfil(data_paciente_132539)
-## Guardo  todos los datos  del perfil de cada paciente
-perfiles=lapply(raw_data,perfil)%>% bind_rows() %>% select(RecordID, Age, Gender, Height,Weight,ICUType)
-glimpse(perfiles)
-```
-
-```
-## Observations: 4,000
-## Variables: 6
-## $ RecordID <dbl> 132539, 132540, 132541, 132543, 132545, 132547, 13254...
-## $ Age      <dbl> 54, 76, 44, 68, 88, 64, 68, 78, 64, 74, 64, 71, 66, 8...
-## $ Gender   <dbl> 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1,...
-## $ Height   <dbl> -1.0, 175.3, -1.0, 180.3, -1.0, 180.3, 162.6, 162.6, ...
-## $ Weight   <dbl> -1.0, 76.0, 56.7, 84.6, -1.0, 114.0, 87.0, 48.4, 60.7...
-## $ ICUType  <dbl> 4, 2, 3, 3, 3, 1, 3, 3, 3, 2, 3, 2, 3, 1, 1, 2, 3, 3,...
-```
-
-```r
-## Ler series
-## se modifica error de time
 
 serie_UCI_parameter<-  function(paciente,parameters){
   paciente %>% arrange(Parameter,Time_Minutes) %>% filter(Parameter %in% parameters) %>% add_column(RecordID=paciente[1,3]$Value) 
-  } 
+} 
 
-##ejemplo
-#parameters = c("FiO2","RespRate","SaO2")
-
+# Parámetros por órgano
 parameters_corazon = c("AST","DiasABP","HR","MAP","NIDiasABP","NIMAP","NISysABP","PaCO2","PaO2","pH","SysABP","TropT")
 parameters_higado = c("Albumin","ALP","ALT","AST","Bilirubin","Cholesterol")
 parameters_rinon = c("ALP","BUN","Creatinine","HCO3","Urine")
 parameters_sangre = c("HCT","Platelets","WBC")
-#parameters_pulmon = c("FiO2","RespRate","SaO2")
+parameters_pulmon = c("FiO2","RespRate","SaO2")
 
 parameters = parameters_corazon
 
 serie_paciente1 =serie_UCI_parameter(raw_data[[1]],parameters)
-# paso parámetros y  apilo 
+
 series_corazon = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_corazon)) %>% bind_rows()
 series_higado = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_higado)) %>% bind_rows()
 series_rinon = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_rinon)) %>% bind_rows()
 series_sangre = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_sangre)) %>% bind_rows()
-#series_pulmon = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_pulmon)) %>% bind_rows()
+series_pulmon = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters_pulmon)) %>% bind_rows()
 
-series_parameters = lapply(raw_data,FUN=function(x) serie_UCI_parameter(x,parameters)) %>% bind_rows()
-```
-
-## En resumen  tenemos
-
-```
-## # A tibble: 4,000 x 6
-##    RecordID   Age Gender Height Weight ICUType
-##       <dbl> <dbl>  <dbl>  <dbl>  <dbl>   <dbl>
-##  1   132539    54      0    -1    -1         4
-##  2   132540    76      1   175.   76         2
-##  3   132541    44      0    -1    56.7       3
-##  4   132543    68      1   180.   84.6       3
-##  5   132545    88      0    -1    -1         3
-##  6   132547    64      1   180.  114         1
-##  7   132548    68      0   163.   87         3
-##  8   132551    78      0   163.   48.4       3
-##  9   132554    64      0    -1    60.7       3
-## 10   132555    74      1   175.   66.1       2
-## # ... with 3,990 more rows
-```
-
-```
-## # A tibble: 1,033,025 x 4
-##    Time_Minutes Parameter Value RecordID
-##           <dbl> <chr>     <dbl>    <dbl>
-##  1            7 HR           73   132539
-##  2           37 HR           77   132539
-##  3           97 HR           60   132539
-##  4          157 HR           62   132539
-##  5          217 HR           80   132539
-##  6          277 HR           74   132539
-##  7          337 HR           73   132539
-##  8          457 HR           64   132539
-##  9          517 HR           64   132539
-## 10          577 HR           66   132539
-## # ... with 1,033,015 more rows
-```
-
-
-```r
-#set-a
-glimpse(perfiles)
-```
-
-```
-## Observations: 4,000
-## Variables: 6
-## $ RecordID <dbl> 132539, 132540, 132541, 132543, 132545, 132547, 13254...
-## $ Age      <dbl> 54, 76, 44, 68, 88, 64, 68, 78, 64, 74, 64, 71, 66, 8...
-## $ Gender   <dbl> 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1,...
-## $ Height   <dbl> -1.0, 175.3, -1.0, 180.3, -1.0, 180.3, 162.6, 162.6, ...
-## $ Weight   <dbl> -1.0, 76.0, 56.7, 84.6, -1.0, 114.0, 87.0, 48.4, 60.7...
-## $ ICUType  <dbl> 4, 2, 3, 3, 3, 1, 3, 3, 3, 2, 3, 2, 3, 1, 1, 2, 3, 3,...
-```
-
-```r
-glimpse(series_parameters)
-```
-
-```
-## Observations: 1,033,025
-## Variables: 4
-## $ Time_Minutes <dbl> 7, 37, 97, 157, 217, 277, 337, 457, 517, 577, 637...
-## $ Parameter    <chr> "HR", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "...
-## $ Value        <dbl> 73, 77, 60, 62, 80, 74, 73, 64, 64, 66, 61, 58, 5...
-## $ RecordID     <dbl> 132539, 132539, 132539, 132539, 132539, 132539, 1...
-```
-
-## Unificar: series, perfiles y scores
-
-Nos faltan los scores clásicos que se utilizan eb las ICU. Estos ewstán el fichero Outcome-a.txt para el set-a
-
-
-```r
 scoresApath="data_basic_physionet/Outcomes-a.txt"
 scoresA=read_csv(scoresApath)
 ```
@@ -286,21 +182,22 @@ scoresA=read_csv(scoresApath)
 
 ```r
 scoresA = data.frame("RecordID" = scoresA$RecordID, "In_hospital_death" = scoresA$`In-hospital_death`)
-##glimpse(scoresA)
-#Scores_perfilesA= inner_join(perfiles,scoresA,"RecordID")
-#glimpse(Scores_perfilesA)
 ```
+### Formación de dataframes
 
-### Extracción factores de las series 
+Una vez se han leído todos los datos, se empezarán a generar los dataframes de cada órgano.
 
-Se genera una tabla con resumenes de  las variables por paciente: media, desviación típica 
-* https://rsanchezs.gitbooks.io/rprogramming/content/chapter9/summarise.html
+Es en esta parte donde se han de elegir las variables que se utilizarán en el estudio. En este caso, se ha decidido que se utilizará la media de las variables de cada órgano porque se cree que es lo que más valor puede aportar al estudio.
+
+Además, se ha realizado un estudio previo donde se han hecho pruebas cogiendo el corazón como ejemplo y cogiendo la media, el valor mínimo y el valor máximo de cada una de sus variables. Pero los resultados del estudio previo comparado con los que hemos obtenido en este estudio son parecidos o incluso un poco peores.
+
+**Corazón**
 
 
 ```r
   series_summary=series_corazon %>%
   group_by(RecordID,Parameter) %>%
-  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE))%>%
+  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE), max = max(Value, na.rm = TRUE))%>%
   summarise(mean=mean(Value,na.rm=TRUE))%>%
   gather(Stat, Value, mean:mean) %>%
   ungroup() %>%
@@ -348,13 +245,13 @@ nrow(data_tidy_corazon)
 ggcorr(data_tidy_corazon, label = TRUE, label_size = 3, label_round = 3)
 ```
 
-![](proyecto_final_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
-
+![](proyecto_final_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+**Hígado**
 
 ```r
 series_summary=series_higado %>%
   group_by(RecordID,Parameter) %>%
-  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE))%>%
+  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE), max = max(Value, na.rm = TRUE))%>%
   summarise(mean=mean(Value,na.rm=TRUE))%>%
   gather(Stat, Value, mean:mean) %>%
   ungroup() %>%
@@ -402,13 +299,13 @@ nrow(data_tidy_higado)
 ggcorr(data_tidy_higado, label = TRUE, label_size = 3, label_round = 3)
 ```
 
-![](proyecto_final_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
-
+![](proyecto_final_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+**Riñón**
 
 ```r
 series_summary=series_rinon %>%
   group_by(RecordID,Parameter) %>%
-  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE))%>%
+  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE), max = max(Value, na.rm = TRUE))%>%
   summarise(mean=mean(Value,na.rm=TRUE))%>%
   gather(Stat, Value, mean:mean) %>%
   ungroup() %>%
@@ -456,13 +353,13 @@ nrow(data_tidy_rinon)
 ggcorr(data_tidy_rinon, label = TRUE, label_size = 3, label_round = 3)
 ```
 
-![](proyecto_final_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
-
+![](proyecto_final_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+**Sangre**
 
 ```r
 series_summary=series_sangre %>%
   group_by(RecordID,Parameter) %>%
-  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE))%>%
+  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE), max = max(Value, na.rm = TRUE))%>%
   summarise(mean=mean(Value,na.rm=TRUE))%>%
   gather(Stat, Value, mean:mean) %>%
   ungroup() %>%
@@ -503,7 +400,56 @@ nrow(data_tidy_sangre)
 ggcorr(data_tidy_sangre, label = TRUE, label_size = 3, label_round = 3)
 ```
 
-![](proyecto_final_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+![](proyecto_final_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+**Pulmón**
+
+```r
+series_summary=series_pulmon %>%
+  group_by(RecordID,Parameter) %>%
+  #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE), max = max(Value, na.rm = TRUE))%>%
+  summarise(mean=mean(Value,na.rm=TRUE))%>%
+  gather(Stat, Value, mean:mean) %>%
+  ungroup() %>%
+  transmute(RecordID, ParameterStat=paste0(Parameter,"_",Stat), Value) %>%
+  spread(ParameterStat, Value)
+
+data_tidy_pulmon = scoresA %>% inner_join(series_summary)
+```
+
+```
+## Joining, by = "RecordID"
+```
+
+```r
+data_tidy_pulmon <- subset( data_tidy_pulmon, select = -RecordID )
+head(data_tidy_pulmon)
+```
+
+```
+##   In_hospital_death FiO2_mean RespRate_mean SaO2_mean
+## 1                 0        NA      17.42857        NA
+## 2                 0 0.5600000            NA  96.83333
+## 3                 0 0.5000000            NA  95.00000
+## 4                 0        NA      15.45763        NA
+## 5                 0        NA      19.16667        NA
+## 6                 0 0.4666667            NA  97.00000
+```
+
+```r
+nrow(data_tidy_pulmon)
+```
+
+```
+## [1] 3746
+```
+
+```r
+ggcorr(data_tidy_pulmon, label = TRUE, label_size = 3, label_round = 3)
+```
+
+![](proyecto_final_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+
+Viendo las matrices de correlación, no parece que hayan muchas variables que tengan una fuerte relación con In_hospital_death. Los órganos que parecen tener más impacto parecen ser el hígado y el riñón.
 
 ### Porcentaje NAs
 
@@ -513,6 +459,7 @@ NA_corazon <- PercentageNA(data_tidy_corazon)
 NA_higado <- PercentageNA(data_tidy_higado)
 NA_rinon <- PercentageNA(data_tidy_rinon)
 NA_sangre <- PercentageNA(data_tidy_sangre)
+NA_pulmon <- PercentageNA(data_tidy_pulmon)
 
 NA_corazon
 ```
@@ -574,6 +521,18 @@ NA_sangre
 ## WBC_mean          0.0025400051
 ```
 
+```r
+NA_pulmon
+```
+
+```
+##                          na
+## In_hospital_death 0.0000000
+## FiO2_mean         0.2746930
+## RespRate_mean     0.7060865
+## SaO2_mean         0.5216231
+```
+
 
 #### Gráfica de NA's según el órgano
 
@@ -586,7 +545,7 @@ NA_Plot_Corazon <-  ggplot(data=NA_corazon, aes(x=rownames(NA_corazon), y=NA_cor
 
 NA_Plot_Higado  <-  ggplot(data=NA_higado, aes(x=rownames(NA_higado), y=NA_higado$na * 100, fill=rownames(NA_higado))) + 
                     geom_bar(stat="identity", position="stack") +
-                    ggtitle("Higado", "Porcentaje de NA's en sus variables.") +
+                    ggtitle("Hígado", "Porcentaje de NA's en sus variables.") +
                     labs(x = "Variables relacionadas", y = "Porcentaje de NA (%)") + 
                     theme (axis.text.x = element_text(size=rel(0.65)))
 
@@ -601,28 +560,40 @@ NA_Plot_Sangre  <-  ggplot(data=NA_sangre, aes(x=rownames(NA_sangre), y=NA_sangr
                     ggtitle("Sangre", "Porcentaje de NA's en sus variables.") +
                     labs(x = "Variables relacionadas", y = "Porcentaje de NA (%)") + 
                     theme (axis.text.x = element_text(size=rel(0.65)))
+
+NA_Plot_Pulmon  <-  ggplot(data=NA_pulmon, aes(x=rownames(NA_pulmon), y=NA_pulmon$na * 100, fill=rownames(NA_pulmon))) + 
+                    geom_bar(stat="identity", position="stack") +
+                    ggtitle("Pulmón", "Porcentaje de NA's en sus variables.") +
+                    labs(x = "Variables relacionadas", y = "Porcentaje de NA (%)") + 
+                    theme (axis.text.x = element_text(size=rel(0.65)))
 NA_Plot_Corazon
 ```
 
-![](proyecto_final_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+![](proyecto_final_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
 
 ```r
 NA_Plot_Higado
 ```
 
-![](proyecto_final_files/figure-html/unnamed-chunk-12-2.png)<!-- -->
+![](proyecto_final_files/figure-html/unnamed-chunk-10-2.png)<!-- -->
 
 ```r
 NA_Plot_Rinon
 ```
 
-![](proyecto_final_files/figure-html/unnamed-chunk-12-3.png)<!-- -->
+![](proyecto_final_files/figure-html/unnamed-chunk-10-3.png)<!-- -->
 
 ```r
 NA_Plot_Sangre
 ```
 
-![](proyecto_final_files/figure-html/unnamed-chunk-12-4.png)<!-- -->
+![](proyecto_final_files/figure-html/unnamed-chunk-10-4.png)<!-- -->
+
+```r
+NA_Plot_Pulmon
+```
+
+![](proyecto_final_files/figure-html/unnamed-chunk-10-5.png)<!-- -->
 
 #### ¿Qué variables deberíamos mantener?
 
@@ -667,18 +638,12 @@ Así pues, las variables resultantes de cada órgano son:
 
 *En todas ellas se presupone la conservación de la variable a predecir in_hospital_death.*
 
+Como la única variabel relacionada con el pulmón que estaba por debajo del umbral que se ha definido es **Fi02**, se ha decidido eliminar el pulmón del estudio, debido a que tener un órgano con solo una variables no es relevante.
+
 
 ### Selección de variables a utilizar
 
 En las siguientes instrucciones se procede a retirar las variables que en el anterior apartada hemos visto que sobrepasan nuestro límite de NA's para cada órgano. Además, para el resto de variables que se mantienen en los distintos *datasets* se ha decidido sustituir los valores no asignados restantes por la media, de esta manera podemos seguir computando resultados sin tener que prescindir de demasiados registros.
-
-
-eliminadas corazon:
-
-- AST_mean
-- DiasABP_mean.
-- MAP_mean.
-- SysABP_mean.
 
 
 ```r
@@ -1131,7 +1096,7 @@ tree_corazon <- C5.0(
 plot(tree_corazon)
 ```
 
-![](proyecto_final_files/figure-html/unnamed-chunk-36-1.png)<!-- -->
+![](proyecto_final_files/figure-html/unnamed-chunk-34-1.png)<!-- -->
 
 ```r
 metrics(tree_corazon, data_tidy_corazon.test_set)
@@ -1160,7 +1125,7 @@ tree_corazon <- C5.0(
 plot(tree_corazon)
 ```
 
-![](proyecto_final_files/figure-html/unnamed-chunk-38-1.png)<!-- -->
+![](proyecto_final_files/figure-html/unnamed-chunk-36-1.png)<!-- -->
 
 ```r
 metrics(tree_corazon, data_norm_corazon.test_set)
@@ -1192,7 +1157,7 @@ tree_higado <- C5.0(
 plot(tree_higado)
 ```
 
-![](proyecto_final_files/figure-html/unnamed-chunk-40-1.png)<!-- -->
+![](proyecto_final_files/figure-html/unnamed-chunk-38-1.png)<!-- -->
 
 
 ```r
@@ -1224,7 +1189,7 @@ tree_higado <- C5.0(
 plot(tree_higado)
 ```
 
-![](proyecto_final_files/figure-html/unnamed-chunk-42-1.png)<!-- -->
+![](proyecto_final_files/figure-html/unnamed-chunk-40-1.png)<!-- -->
 
 
 ```r
@@ -1257,7 +1222,7 @@ tree_rinon <- C5.0(
 plot(tree_rinon)
 ```
 
-![](proyecto_final_files/figure-html/unnamed-chunk-44-1.png)<!-- -->
+![](proyecto_final_files/figure-html/unnamed-chunk-42-1.png)<!-- -->
 
 
 ```r
@@ -1287,7 +1252,7 @@ tree_rinon <- C5.0(
 plot(tree_rinon)
 ```
 
-![](proyecto_final_files/figure-html/unnamed-chunk-46-1.png)<!-- -->
+![](proyecto_final_files/figure-html/unnamed-chunk-44-1.png)<!-- -->
 
 
 ```r
@@ -1321,7 +1286,7 @@ tree_sangre <- C5.0(
 plot(tree_sangre)
 ```
 
-![](proyecto_final_files/figure-html/unnamed-chunk-48-1.png)<!-- -->
+![](proyecto_final_files/figure-html/unnamed-chunk-46-1.png)<!-- -->
 
 
 ```r
@@ -1352,7 +1317,7 @@ tree_sangre <- C5.0(
 plot(tree_sangre)
 ```
 
-![](proyecto_final_files/figure-html/unnamed-chunk-50-1.png)<!-- -->
+![](proyecto_final_files/figure-html/unnamed-chunk-48-1.png)<!-- -->
 
 
 ```r
@@ -1513,36 +1478,36 @@ inspect(sort(corazon_rules, by = "confidence"))
 ```
 
 ```
-##     lhs                             rhs                      support confidence     lift count
-## [1] {HR_mean=[-0.205,0.0466),                                                                 
-##      NIDiasABP_mean=[-1,-0.012),                                                              
-##      NISysABP_mean=[-1,-0.0598),                                                              
-##      PaCO2_mean=[-0.402,1],                                                                   
-##      pH_mean=[-0.982,1]}         => {In_hospital_death=1} 0.00100553        0.8 5.744404     4
-## [2] {HR_mean=[-0.205,0.0466),                                                                 
-##      NIDiasABP_mean=[-1,-0.012),                                                              
-##      NIMAP_mean=[-1,0.0818),                                                                  
-##      PaCO2_mean=[-0.402,1],                                                                   
-##      pH_mean=[-0.982,1]}         => {In_hospital_death=1} 0.00100553        0.8 5.744404     4
-## [3] {HR_mean=[-0.205,0.0466),                                                                 
-##      NIDiasABP_mean=[-1,-0.012),                                                              
-##      NIMAP_mean=[-1,0.0818),                                                                  
-##      NISysABP_mean=[-1,-0.0598),                                                              
-##      PaCO2_mean=[-0.402,1],                                                                   
-##      pH_mean=[-0.982,1]}         => {In_hospital_death=1} 0.00100553        0.8 5.744404     4
-## [4] {HR_mean=[-1,-0.205),                                                                     
-##      NIDiasABP_mean=[-1,-0.012),                                                              
-##      NIMAP_mean=[0.0818,0.186),                                                               
-##      PaCO2_mean=[-0.402,1],                                                                   
-##      PaO2_mean=[-0.485,1],                                                                    
-##      pH_mean=[-0.983,-0.982)}    => {In_hospital_death=1} 0.00100553        0.8 5.744404     4
-## [5] {HR_mean=[-1,-0.205),                                                                     
-##      NIDiasABP_mean=[-1,-0.012),                                                              
-##      NIMAP_mean=[0.0818,0.186),                                                               
-##      NISysABP_mean=[0.0342,1],                                                                
-##      PaCO2_mean=[-0.402,1],                                                                   
-##      PaO2_mean=[-0.485,1],                                                                    
-##      pH_mean=[-0.983,-0.982)}    => {In_hospital_death=1} 0.00100553        0.8 5.744404     4
+##     lhs                          rhs                      support confidence     lift count
+## [1] {HR_mean=[80.6,92.5),                                                                  
+##      NIDiasABP_mean=[0,53.1),                                                              
+##      NISysABP_mean=[0,110),                                                                
+##      PaCO2_mean=[40.5,98],                                                                 
+##      pH_mean=[7.44,129]}      => {In_hospital_death=1} 0.00100553        0.8 5.744404     4
+## [2] {HR_mean=[80.6,92.5),                                                                  
+##      NIDiasABP_mean=[0,53.1),                                                              
+##      NIMAP_mean=[0,71.7),                                                                  
+##      PaCO2_mean=[40.5,98],                                                                 
+##      pH_mean=[7.44,129]}      => {In_hospital_death=1} 0.00100553        0.8 5.744404     4
+## [3] {HR_mean=[80.6,92.5),                                                                  
+##      NIDiasABP_mean=[0,53.1),                                                              
+##      NIMAP_mean=[0,71.7),                                                                  
+##      NISysABP_mean=[0,110),                                                                
+##      PaCO2_mean=[40.5,98],                                                                 
+##      pH_mean=[7.44,129]}      => {In_hospital_death=1} 0.00100553        0.8 5.744404     4
+## [4] {HR_mean=[42.8,80.6),                                                                  
+##      NIDiasABP_mean=[0,53.1),                                                              
+##      NIMAP_mean=[71.7,78.6),                                                               
+##      PaCO2_mean=[40.5,98],                                                                 
+##      PaO2_mean=[148,500],                                                                  
+##      pH_mean=[7.38,7.44)}     => {In_hospital_death=1} 0.00100553        0.8 5.744404     4
+## [5] {HR_mean=[42.8,80.6),                                                                  
+##      NIDiasABP_mean=[0,53.1),                                                              
+##      NIMAP_mean=[71.7,78.6),                                                               
+##      NISysABP_mean=[121,234],                                                              
+##      PaCO2_mean=[40.5,98],                                                                 
+##      PaO2_mean=[148,500],                                                                  
+##      pH_mean=[7.38,7.44)}     => {In_hospital_death=1} 0.00100553        0.8 5.744404     4
 ```
 
 
@@ -1657,11 +1622,11 @@ inspect(sort(rinon_rules, by = "confidence"))
 ```
 
 ```
-##     lhs                              rhs                       support confidence     lift count
-## [1] {BUN_mean=[-0.723,1],                                                                       
-##      Creatinine_mean=[-1,-0.926),                                                               
-##      HCO3_mean=[-1,-0.303),                                                                     
-##      Urine_mean=[-1,-0.943)}      => {In_hospital_death=1} 0.001251564        0.5 3.605596     5
+##     lhs                            rhs                       support confidence     lift count
+## [1] {BUN_mean=[25.6,171],                                                                     
+##      Creatinine_mean=[0.2,0.8),                                                               
+##      HCO3_mean=[9.12,22.3),                                                                   
+##      Urine_mean=[0,87.4)}       => {In_hospital_death=1} 0.001251564        0.5 3.605596     5
 ```
 
 

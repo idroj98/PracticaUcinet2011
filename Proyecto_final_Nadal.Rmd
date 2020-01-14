@@ -531,73 +531,81 @@ data_norm_sangre.test_set <- data_norm_sangre[-split_idx,]
 ```
 # **Fase 1**: Neural Net estudio preliminar 
 
-
-
-
-
-
-
-
-
-
-
-
 ```{r}
 library(e1071)
 ```
 
+## Predicción corazón
 ```{r}
-NBclassfier <- naiveBayes(
+NBclassfier_corazon <- naiveBayes(
                           In_hospital_death ~ HR_mean + NIDiasABP_mean + NIMAP_mean + NISysABP_mean + PaCO2_mean + PaO2_mean + pH_mean,
                           data=data_norm_corazon.train_set
                           )
-print(NBclassfier)
+print(NBclassfier_corazon)
 ```
 ```{r}
-pred_NB_corazon <- predict(NBclassfier, newdata = data_norm_corazon.test_set, type = "class")
+pred_NB_corazon <- predict(NBclassfier_corazon, newdata = data_norm_corazon.test_set, type = "class")
 
 ```
 
-
-## Predicción corazón
 ```{r}
-nn_corazon <- neuralnet("In_hospital_death ~ HR_mean + NIDiasABP_mean + NIMAP_mean + NISysABP_mean + PaCO2_mean + PaO2_mean + pH_mean", 
-                         data = data_tidy_corazon.train_set,
-                         hidden = c(8,4,4,2),
-                         stepmax=1e6,
-                         algorithm = "backprop",
-                         linear.output = FALSE, # FALSE: Classification TRUE: Regression
-                         err.fct = "sse", #Error Function 
-                         act.fct = "logistic",
-                         learningrate = 0.01
-                         ) #Activation Function
-#cat(sprintf("Best error reached: %f", nn_corazon$result.matrix[c('error'), ]))
+metrics(NBclassfier_corazon, data_norm_corazon.test_set)
 ```
 
+## Predicción hígado
 ```{r}
-metrics(nn_corazon, data_tidy_corazon.test_set)
+NBclassfier_higado <- naiveBayes(
+                          In_hospital_death ~ Albumin_mean + ALP_mean + ALT_mean + AST_mean + Bilirubin_mean,
+                          data = data_norm_higado.train_set,
+                          )
+print(NBclassfier_higado)
 ```
-## Predicción sangre
 ```{r}
-set.seed(101)
-nn_corazon_norm <- neuralnet("In_hospital_death ~ HR_mean + NIDiasABP_mean + NIMAP_mean + NISysABP_mean + PaCO2_mean + PaO2_mean + pH_mean", 
-                         data = data_norm_corazon.train_set,
-                         hidden = c(4,8,8,4),
-                         stepmax=1e6,
-                         algorithm = "backprop",
-                         linear.output = FALSE, # FALSE: Classification TRUE: Regression
-                         err.fct = "sse", #Error Function 
-                         act.fct = "tanh",
-                         learningrate = 0.01
-                         ) #Activation Function
-plot(nn_corazon_norm)
+pred_NB_higado <- predict(NBclassfier_higado, newdata = data_norm_higado.test_set, type = "class")
+
 ```
 
 ```{r}
-pred <- predict(nn_corazon_norm, data_norm_corazon.test_set)
-#data.frame(data_norm_sangre.test_set$In_hospital_death,round(pred))
-metrics(nn_corazon_norm, data_norm_corazon.test_set)
+metrics(NBclassfier_higado, data_norm_higado.test_set)
 ```
+
+## Predicción Riñón
+
+```{r}
+NBclassfier_rinon <- naiveBayes(
+                          In_hospital_death ~ BUN_mean + Creatinine_mean + HCO3_mean + Urine_mean,
+                          data = data_norm_rinon.train_set
+                          )
+print(NBclassfier_rinon)
+```
+```{r}
+pred_NB_rinon <- predict(NBclassfier_rinon, newdata = data_norm_rinon.test_set, type = "class")
+
+```
+
+```{r}
+metrics(NBclassfier_rinon, data_norm_rinon.test_set)
+```
+
+## Predicción Sangre
+
+
+```{r}
+NBclassfier_sangre <- naiveBayes(
+                          In_hospital_death ~ HCT_mean + Platelets_mean + WBC_mean,
+                          data = data_norm_sangre.train_set
+                          )
+print(NBclassfier_sangre)
+```
+```{r}
+pred_NB_sangre <- predict(NBclassfier_sangre, newdata = data_norm_sangre.test_set, type = "class")
+
+```
+
+```{r}
+metrics(NBclassfier_sangre, data_norm_sangre.test_set)
+```
+
 
 # **Fase 2**: Tree classification
 

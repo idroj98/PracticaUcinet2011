@@ -18,6 +18,10 @@ library("tidyverse")
 library(dplyr)
 library(neuralnet)
 library(GGally)
+library(e1071)
+library(C50)
+library(arules)
+library(arulesViz)
 ```
 
 # Introducción: Physionet 2012 UCI data mortality
@@ -536,10 +540,6 @@ data_norm_sangre.test_set <- data_norm_sangre[-split_idx,]
 ```
 ## **Fase 1**: Naive Bayes estudio preliminar 
 
-```{r}
-library(e1071)
-```
-
 ### Predicción corazón
 **Datos sin normalizar**
 ```{r}
@@ -647,11 +647,6 @@ metrics(NBclassfier_sangre, data_norm_sangre.test_set)
 ## **Fase 2**: Tree classification
 
 Los árboles nos permiten escoger los orgános que son más determinantes para el in_hospital_death. Fase para descartar uno o más orgános por completo. 
-
-```{r}
-library(C50)
-```
-``
 
 ### Predicción Corazón
 
@@ -766,11 +761,21 @@ metrics(tree_sangre, data_norm_sangre.test_set)
 ## **Fase 3**: Association Rules
 
 Dentro de los organos escogidos en la fase anterior (Corazón y Riñón) identificamos las variables que más influencia tienen en la muerte en hospital para cada órgano. Para ello haremos uso de las association rules.
-```{r}
-library(arules)
-library(arulesViz)
-```
+
 ### Reglas del Corazón
+**Datos sin normalizar**
+```{r}
+corazon_rules <- apriori(data = data_tidy_corazon, 
+                         parameter = list (supp=0.001,conf = 0.80),
+                        
+                         appearance = list (rhs="In_hospital_death=1")
+                         )
+```
+```{r}
+corazon_rules
+inspect(sort(corazon_rules, by = "confidence"))
+```
+**Datos normalizados**
 ```{r}
 corazon_rules <- apriori(data = data_norm_corazon, 
                          parameter = list (supp=0.001,conf = 0.80),
@@ -785,6 +790,19 @@ inspect(sort(corazon_rules, by = "confidence"))
 
 
 ### Reglas del Riñon
+**Datos sin normalizar**
+```{r}
+rinon_rules <- apriori(data = data_tidy_rinon, 
+                         parameter = list (supp=0.001,conf = 0.5),
+                        
+                         appearance = list (rhs="In_hospital_death=1")
+                         )
+```
+```{r}
+rinon_rules
+inspect(sort(rinon_rules, by = "confidence"))
+```
+**Datos normalizados**
 ```{r}
 rinon_rules <- apriori(data = data_norm_rinon, 
                          parameter = list (supp=0.001,conf = 0.5),

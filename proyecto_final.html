@@ -1029,8 +1029,6 @@ data_norm_sangre.test_set &lt;- data_norm_sangre[-split_idx,]</code></pre>
 </div>
 <div id="fase-1-naive-bayes-estudio-preliminar" class="section level2">
 <h2><span class="header-section-number">5.2</span> <strong>Fase 1</strong>: Naive Bayes estudio preliminar</h2>
-<pre class="r"><code>library(e1071)</code></pre>
-<pre><code>## Warning: package &#39;e1071&#39; was built under R version 3.6.2</code></pre>
 <div id="prediccion-corazon" class="section level3">
 <h3><span class="header-section-number">5.2.1</span> Predicción corazón</h3>
 <p><strong>Datos sin normalizar</strong></p>
@@ -1159,9 +1157,6 @@ data_norm_sangre.test_set &lt;- data_norm_sangre[-split_idx,]</code></pre>
 <div id="fase-2-tree-classification" class="section level2">
 <h2><span class="header-section-number">5.3</span> <strong>Fase 2</strong>: Tree classification</h2>
 <p>Los árboles nos permiten escoger los orgános que son más determinantes para el in_hospital_death. Fase para descartar uno o más orgános por completo.</p>
-<pre class="r"><code>library(C50)</code></pre>
-<pre><code>## Warning: package &#39;C50&#39; was built under R version 3.6.2</code></pre>
-<p>``</p>
 <div id="prediccion-corazon-1" class="section level3">
 <h3><span class="header-section-number">5.3.1</span> Predicción Corazón</h3>
 <p><strong>Datos sin normalizar</strong></p>
@@ -1307,30 +1302,71 @@ plot(tree_sangre)</code></pre>
 <div id="fase-3-association-rules" class="section level2">
 <h2><span class="header-section-number">5.4</span> <strong>Fase 3</strong>: Association Rules</h2>
 <p>Dentro de los organos escogidos en la fase anterior (Corazón y Riñón) identificamos las variables que más influencia tienen en la muerte en hospital para cada órgano. Para ello haremos uso de las association rules.</p>
-<pre class="r"><code>library(arules)</code></pre>
-<pre><code>## Warning: package &#39;arules&#39; was built under R version 3.6.2</code></pre>
-<pre><code>## Loading required package: Matrix</code></pre>
-<pre><code>## 
-## Attaching package: &#39;Matrix&#39;</code></pre>
-<pre><code>## The following objects are masked from &#39;package:tidyr&#39;:
-## 
-##     expand, pack, unpack</code></pre>
-<pre><code>## 
-## Attaching package: &#39;arules&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:dplyr&#39;:
-## 
-##     recode</code></pre>
-<pre><code>## The following objects are masked from &#39;package:base&#39;:
-## 
-##     abbreviate, write</code></pre>
-<pre class="r"><code>library(arulesViz)</code></pre>
-<pre><code>## Warning: package &#39;arulesViz&#39; was built under R version 3.6.2</code></pre>
-<pre><code>## Loading required package: grid</code></pre>
-<pre><code>## Registered S3 method overwritten by &#39;seriation&#39;:
-##   method         from 
-##   reorder.hclust gclus</code></pre>
 <div id="reglas-del-corazon" class="section level3">
 <h3><span class="header-section-number">5.4.1</span> Reglas del Corazón</h3>
+<p><strong>Datos sin normalizar</strong></p>
+<pre class="r"><code>corazon_rules &lt;- apriori(data = data_tidy_corazon, 
+                         parameter = list (supp=0.001,conf = 0.80),
+                        
+                         appearance = list (rhs=&quot;In_hospital_death=1&quot;)
+                         )</code></pre>
+<pre><code>## Warning: Column(s) 1, 2, 3, 4, 5, 6, 7 not logical or factor. Applying
+## default discretization (see &#39;? discretizeDF&#39;).</code></pre>
+<pre><code>## Apriori
+## 
+## Parameter specification:
+##  confidence minval smax arem  aval originalSupport maxtime support minlen
+##         0.8    0.1    1 none FALSE            TRUE       5   0.001      1
+##  maxlen target   ext
+##      10  rules FALSE
+## 
+## Algorithmic control:
+##  filter tree heap memopt load sort verbose
+##     0.1 TRUE TRUE  FALSE TRUE    2    TRUE
+## 
+## Absolute minimum support count: 3 
+## 
+## set item appearances ...[1 item(s)] done [0.00s].
+## set transactions ...[23 item(s), 3978 transaction(s)] done [0.00s].
+## sorting and recoding items ... [23 item(s)] done [0.00s].
+## creating transaction tree ... done [0.00s].
+## checking subsets of size 1 2 3 4 5 6 7 8 done [0.01s].
+## writing ... [5 rule(s)] done [0.00s].
+## creating S4 object  ... done [0.00s].</code></pre>
+<pre class="r"><code>corazon_rules</code></pre>
+<pre><code>## set of 5 rules</code></pre>
+<pre class="r"><code>inspect(sort(corazon_rules, by = &quot;confidence&quot;))</code></pre>
+<pre><code>##     lhs                          rhs                      support confidence     lift count
+## [1] {HR_mean=[80.6,92.5),                                                                  
+##      NIDiasABP_mean=[0,53.1),                                                              
+##      NISysABP_mean=[0,110),                                                                
+##      PaCO2_mean=[40.5,98],                                                                 
+##      pH_mean=[7.44,129]}      =&gt; {In_hospital_death=1} 0.00100553        0.8 5.744404     4
+## [2] {HR_mean=[80.6,92.5),                                                                  
+##      NIDiasABP_mean=[0,53.1),                                                              
+##      NIMAP_mean=[0,71.7),                                                                  
+##      PaCO2_mean=[40.5,98],                                                                 
+##      pH_mean=[7.44,129]}      =&gt; {In_hospital_death=1} 0.00100553        0.8 5.744404     4
+## [3] {HR_mean=[80.6,92.5),                                                                  
+##      NIDiasABP_mean=[0,53.1),                                                              
+##      NIMAP_mean=[0,71.7),                                                                  
+##      NISysABP_mean=[0,110),                                                                
+##      PaCO2_mean=[40.5,98],                                                                 
+##      pH_mean=[7.44,129]}      =&gt; {In_hospital_death=1} 0.00100553        0.8 5.744404     4
+## [4] {HR_mean=[42.8,80.6),                                                                  
+##      NIDiasABP_mean=[0,53.1),                                                              
+##      NIMAP_mean=[71.7,78.6),                                                               
+##      PaCO2_mean=[40.5,98],                                                                 
+##      PaO2_mean=[148,500],                                                                  
+##      pH_mean=[7.38,7.44)}     =&gt; {In_hospital_death=1} 0.00100553        0.8 5.744404     4
+## [5] {HR_mean=[42.8,80.6),                                                                  
+##      NIDiasABP_mean=[0,53.1),                                                              
+##      NIMAP_mean=[71.7,78.6),                                                               
+##      NISysABP_mean=[121,234],                                                              
+##      PaCO2_mean=[40.5,98],                                                                 
+##      PaO2_mean=[148,500],                                                                  
+##      pH_mean=[7.38,7.44)}     =&gt; {In_hospital_death=1} 0.00100553        0.8 5.744404     4</code></pre>
+<p><strong>Datos normalizados</strong></p>
 <pre class="r"><code>corazon_rules &lt;- apriori(data = data_norm_corazon, 
                          parameter = list (supp=0.001,conf = 0.80),
                         
@@ -1356,7 +1392,7 @@ plot(tree_sangre)</code></pre>
 ## set transactions ...[23 item(s), 3978 transaction(s)] done [0.00s].
 ## sorting and recoding items ... [23 item(s)] done [0.00s].
 ## creating transaction tree ... done [0.00s].
-## checking subsets of size 1 2 3 4 5 6 7 8 done [0.02s].
+## checking subsets of size 1 2 3 4 5 6 7 8 done [0.01s].
 ## writing ... [5 rule(s)] done [0.00s].
 ## creating S4 object  ... done [0.00s].</code></pre>
 <pre class="r"><code>corazon_rules</code></pre>
@@ -1395,6 +1431,44 @@ plot(tree_sangre)</code></pre>
 </div>
 <div id="reglas-del-rinon" class="section level3">
 <h3><span class="header-section-number">5.4.2</span> Reglas del Riñon</h3>
+<p><strong>Datos sin normalizar</strong></p>
+<pre class="r"><code>rinon_rules &lt;- apriori(data = data_tidy_rinon, 
+                         parameter = list (supp=0.001,conf = 0.5),
+                        
+                         appearance = list (rhs=&quot;In_hospital_death=1&quot;)
+                         )</code></pre>
+<pre><code>## Warning: Column(s) 1, 2, 3, 4 not logical or factor. Applying default
+## discretization (see &#39;? discretizeDF&#39;).</code></pre>
+<pre><code>## Apriori
+## 
+## Parameter specification:
+##  confidence minval smax arem  aval originalSupport maxtime support minlen
+##         0.5    0.1    1 none FALSE            TRUE       5   0.001      1
+##  maxlen target   ext
+##      10  rules FALSE
+## 
+## Algorithmic control:
+##  filter tree heap memopt load sort verbose
+##     0.1 TRUE TRUE  FALSE TRUE    2    TRUE
+## 
+## Absolute minimum support count: 3 
+## 
+## set item appearances ...[1 item(s)] done [0.00s].
+## set transactions ...[14 item(s), 3995 transaction(s)] done [0.00s].
+## sorting and recoding items ... [14 item(s)] done [0.00s].
+## creating transaction tree ... done [0.00s].
+## checking subsets of size 1 2 3 4 5 done [0.00s].
+## writing ... [1 rule(s)] done [0.00s].
+## creating S4 object  ... done [0.00s].</code></pre>
+<pre class="r"><code>rinon_rules</code></pre>
+<pre><code>## set of 1 rules</code></pre>
+<pre class="r"><code>inspect(sort(rinon_rules, by = &quot;confidence&quot;))</code></pre>
+<pre><code>##     lhs                            rhs                       support confidence     lift count
+## [1] {BUN_mean=[25.6,171],                                                                     
+##      Creatinine_mean=[0.2,0.8),                                                               
+##      HCO3_mean=[9.12,22.3),                                                                   
+##      Urine_mean=[0,87.4)}       =&gt; {In_hospital_death=1} 0.001251564        0.5 3.605596     5</code></pre>
+<p><strong>Datos normalizados</strong></p>
 <pre class="r"><code>rinon_rules &lt;- apriori(data = data_norm_rinon, 
                          parameter = list (supp=0.001,conf = 0.5),
                         

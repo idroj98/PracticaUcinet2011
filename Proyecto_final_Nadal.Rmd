@@ -454,6 +454,7 @@ set.seed(101)
 
 data_norm_corazon <- as.data.frame(apply(data_tidy_corazon[, 2:8], 2, nomalizar_1))
 In_hospital_death <- as.factor(data_tidy_corazon$In_hospital_death)
+data_tidy_corazon <-data.frame(data_tidy_corazon[,2:8],In_hospital_death)
 data_norm_corazon <- data.frame(data_norm_corazon,In_hospital_death)
 
 # data_norm_corazon <- as.data.frame(apply(data_tidy_corazon[, 1:11], 2, nomalizar_1))
@@ -467,28 +468,24 @@ data_norm_corazon.train_set <- data_norm_corazon[split_idx,]
 data_norm_corazon.test_set <- data_norm_corazon[-split_idx,]
 ```
 
-
 **HÍGADO**
 ```{r}
 set.seed(101)
 
 data_norm_higado <- as.data.frame(apply(data_tidy_higado[, 2:6], 2, nomalizar_1))
 In_hospital_death <- as.factor(data_tidy_higado$In_hospital_death)
+data_tidy_higado <-data.frame(data_tidy_higado[,2:6],In_hospital_death)
 data_norm_higado <- data.frame(data_norm_higado,In_hospital_death)
 
 # data_norm_higado <- as.data.frame(apply(data_tidy_higado[, 1:6], 2, nomalizar_1))
 
-#split_idx <- sample(seq_len(nrow(data_tidy_higado)), size = 0.67*nrow(data_tidy_higado))
-#data_tidy_higado.train_set <- data_tidy_higado[split_idx,]
-#data_tidy_higado.test_set <- data_tidy_higado[-split_idx,]
+split_idx <- sample(seq_len(nrow(data_tidy_higado)), size = 0.67*nrow(data_tidy_higado))
+data_tidy_higado.train_set <- data_tidy_higado[split_idx,]
+data_tidy_higado.test_set <- data_tidy_higado[-split_idx,]
 
 split_idx <- sample(seq_len(nrow(data_norm_higado)), size = 0.67*nrow(data_norm_higado))
 data_norm_higado.train_set <- data_norm_higado[split_idx,]
 data_norm_higado.test_set <- data_norm_higado[-split_idx,]
-```
-
-```{r}
-data_norm_higado
 ```
 
 **RIÑÓN**
@@ -497,13 +494,14 @@ set.seed(101)
 
 data_norm_rinon <- as.data.frame(apply(data_tidy_rinon[, 2:5], 2, nomalizar_1))
 In_hospital_death <- as.factor(data_tidy_rinon$In_hospital_death)
+data_tidy_rinon <-data.frame(data_tidy_rinon[,2:5],In_hospital_death)
 data_norm_rinon <- data.frame(data_norm_rinon,In_hospital_death)
 
 # data_norm_rinon <- as.data.frame(apply(data_tidy_rinon[, 1:5], 2, nomalizar_1))
 
-#split_idx <- sample(seq_len(nrow(data_tidy_rinon)), size = 0.67*nrow(data_tidy_rinon))
-#data_tidy_rinon.train_set <- data_tidy_rinon[split_idx,]
-#data_tidy_rinon.test_set <- data_tidy_rinon[-split_idx,]
+split_idx <- sample(seq_len(nrow(data_tidy_rinon)), size = 0.67*nrow(data_tidy_rinon))
+data_tidy_rinon.train_set <- data_tidy_rinon[split_idx,]
+data_tidy_rinon.test_set <- data_tidy_rinon[-split_idx,]
 
 split_idx <- sample(seq_len(nrow(data_norm_rinon)), size = 0.67*nrow(data_norm_rinon))
 data_norm_rinon.train_set <- data_norm_rinon[split_idx,]
@@ -516,36 +514,44 @@ set.seed(101)
 
 data_norm_sangre <- as.data.frame(apply(data_tidy_sangre[, 2:4], 2, nomalizar_1))
 In_hospital_death <- as.factor(data_tidy_sangre$In_hospital_death)
+data_tidy_sangre <-data.frame(data_tidy_sangre[2:4],In_hospital_death)
 data_norm_sangre <- data.frame(data_norm_sangre,In_hospital_death)
 
 # data_norm_sangre <- as.data.frame(apply(data_tidy_sangre[, 1:4], 2, nomalizar_1))
 
-#split_idx <- sample(seq_len(nrow(data_tidy_sangre)), size = 0.67*nrow(data_tidy_sangre))
-#data_tidy_sangre.train_set <- data_tidy_sangre[split_idx,]
-#data_tidy_sangre.test_set <- data_tidy_sangre[-split_idx,]
+split_idx <- sample(seq_len(nrow(data_tidy_sangre)), size = 0.67*nrow(data_tidy_sangre))
+data_tidy_sangre.train_set <- data_tidy_sangre[split_idx,]
+data_tidy_sangre.test_set <- data_tidy_sangre[-split_idx,]
 
 split_idx <- sample(seq_len(nrow(data_norm_sangre)), size = 0.67*nrow(data_norm_sangre))
 data_norm_sangre.train_set <- data_norm_sangre[split_idx,]
 data_norm_sangre.test_set <- data_norm_sangre[-split_idx,]
 
 ```
-# **Fase 1**: Neural Net estudio preliminar 
+# **Fase 1**: Naive Bayes estudio preliminar 
 
 ```{r}
 library(e1071)
 ```
 
 ## Predicción corazón
+### Datos sin normalizar
+```{r}
+NBclassfier_corazon <- naiveBayes(
+                          In_hospital_death ~ HR_mean + NIDiasABP_mean + NIMAP_mean + NISysABP_mean + PaCO2_mean + PaO2_mean + pH_mean,
+                          data=data_tidy_corazon.train_set
+                          )
+```
+
+```{r}
+metrics(NBclassfier_corazon, data_tidy_corazon.test_set)
+```
+### Datos normalizados
 ```{r}
 NBclassfier_corazon <- naiveBayes(
                           In_hospital_death ~ HR_mean + NIDiasABP_mean + NIMAP_mean + NISysABP_mean + PaCO2_mean + PaO2_mean + pH_mean,
                           data=data_norm_corazon.train_set
                           )
-print(NBclassfier_corazon)
-```
-```{r}
-pred_NB_corazon <- predict(NBclassfier_corazon, newdata = data_norm_corazon.test_set, type = "class")
-
 ```
 
 ```{r}
@@ -553,16 +559,24 @@ metrics(NBclassfier_corazon, data_norm_corazon.test_set)
 ```
 
 ## Predicción hígado
+### Datos sin normalizar
+```{r}
+NBclassfier_higado <- naiveBayes(
+                          In_hospital_death ~ Albumin_mean + ALP_mean + ALT_mean + AST_mean + Bilirubin_mean,
+                          data = data_tidy_higado.train_set,
+                          )
+```
+
+```{r}
+metrics(NBclassfier_higado, data_tidy_higado.test_set)
+```
+
+### Datos normalizados
 ```{r}
 NBclassfier_higado <- naiveBayes(
                           In_hospital_death ~ Albumin_mean + ALP_mean + ALT_mean + AST_mean + Bilirubin_mean,
                           data = data_norm_higado.train_set,
                           )
-print(NBclassfier_higado)
-```
-```{r}
-pred_NB_higado <- predict(NBclassfier_higado, newdata = data_norm_higado.test_set, type = "class")
-
 ```
 
 ```{r}
@@ -571,16 +585,24 @@ metrics(NBclassfier_higado, data_norm_higado.test_set)
 
 ## Predicción Riñón
 
+### Datos sin normalizar
+```{r}
+NBclassfier_rinon <- naiveBayes(
+                          In_hospital_death ~ BUN_mean + Creatinine_mean + HCO3_mean + Urine_mean,
+                          data = data_tidy_rinon.train_set
+                          )
+```
+
+```{r}
+metrics(NBclassfier_rinon, data_tidy_rinon.test_set)
+```
+### Datos normalizados
+
 ```{r}
 NBclassfier_rinon <- naiveBayes(
                           In_hospital_death ~ BUN_mean + Creatinine_mean + HCO3_mean + Urine_mean,
                           data = data_norm_rinon.train_set
                           )
-print(NBclassfier_rinon)
-```
-```{r}
-pred_NB_rinon <- predict(NBclassfier_rinon, newdata = data_norm_rinon.test_set, type = "class")
-
 ```
 
 ```{r}
@@ -589,17 +611,26 @@ metrics(NBclassfier_rinon, data_norm_rinon.test_set)
 
 ## Predicción Sangre
 
+### Datos sin normalizar
+
+```{r}
+NBclassfier_sangre <- naiveBayes(
+                          In_hospital_death ~ HCT_mean + Platelets_mean + WBC_mean,
+                          data = data_tidy_sangre.train_set
+                          )
+```
+
+```{r}
+metrics(NBclassfier_sangre, data_tidy_sangre.test_set)
+```
+
+### Datos normalizados
 
 ```{r}
 NBclassfier_sangre <- naiveBayes(
                           In_hospital_death ~ HCT_mean + Platelets_mean + WBC_mean,
                           data = data_norm_sangre.train_set
                           )
-print(NBclassfier_sangre)
-```
-```{r}
-pred_NB_sangre <- predict(NBclassfier_sangre, newdata = data_norm_sangre.test_set, type = "class")
-
 ```
 
 ```{r}
@@ -616,9 +647,21 @@ library(C50)
 ```
 ``
 
-## Clasificación Corazón
-```{r}
+## Predicción Corazón
 
+### Datos sin normalizar
+```{r}
+tree_corazon <- C5.0(
+              In_hospital_death ~ HR_mean + NIDiasABP_mean + NIMAP_mean + NISysABP_mean + PaCO2_mean + PaO2_mean + pH_mean,
+              data = data_tidy_corazon.train_set
+              )
+plot(tree_corazon)
+```
+```{r}
+metrics(tree_corazon, data_tidy_corazon.test_set)
+```
+### Datos normalizados
+```{r}
 tree_corazon <- C5.0(
               In_hospital_death ~ HR_mean + NIDiasABP_mean + NIMAP_mean + NISysABP_mean + PaCO2_mean + PaO2_mean + pH_mean,
               data = data_norm_corazon.train_set
@@ -626,12 +669,25 @@ tree_corazon <- C5.0(
 plot(tree_corazon)
 ```
 ```{r}
-pred_corazon <- predict(tree_corazon, data_norm_corazon.test_set)
 metrics(tree_corazon, data_norm_corazon.test_set)
 ```
 
 
-## Clasificación Higado
+## Predicción Higado
+### Datos sin normalizar
+```{r}
+tree_higado <- C5.0(
+              In_hospital_death ~ Albumin_mean + ALP_mean + ALT_mean + AST_mean + Bilirubin_mean,
+              data = data_tidy_higado.train_set
+              )
+plot(tree_higado)
+```
+
+```{r}
+metrics(tree_higado, data_tidy_higado.test_set)
+```
+### Datos normalizados
+
 ```{r}
 tree_higado <- C5.0(
               In_hospital_death ~ Albumin_mean + ALP_mean + ALT_mean + AST_mean + Bilirubin_mean,
@@ -642,11 +698,24 @@ plot(tree_higado)
 ```
 
 ```{r}
-pred_higado <- predict(tree_higado, data_norm_higado.test_set)
 metrics(tree_higado, data_norm_higado.test_set)
 ```
 
-## Clasificación Riñón
+## Predicción Riñón
+
+### Datos sin normalizar
+```{r}
+tree_rinon <- C5.0(
+              In_hospital_death ~ BUN_mean + Creatinine_mean + HCO3_mean + Urine_mean,
+              data = data_tidy_rinon.train_set
+              )
+plot(tree_rinon)
+```
+
+```{r}
+metrics(tree_rinon, data_tidy_rinon.test_set)
+```
+### Datos normalizados
 ```{r}
 tree_rinon <- C5.0(
               In_hospital_death ~ BUN_mean + Creatinine_mean + HCO3_mean + Urine_mean,
@@ -656,12 +725,26 @@ plot(tree_rinon)
 ```
 
 ```{r}
-pred_rinon <- predict(tree_rinon, data_norm_rinon.test_set)
 metrics(tree_rinon, data_norm_rinon.test_set)
 ```
 
 
-## Clasificación Sangre
+## Predicción Sangre
+
+### Datos sin normalizar
+```{r}
+tree_sangre <- C5.0(
+              In_hospital_death ~ HCT_mean + Platelets_mean + WBC_mean,
+              data = data_tidy_sangre.train_set
+              )
+plot(tree_sangre)
+```
+
+```{r}
+metrics(tree_sangre, data_tidy_sangre.test_set)
+```
+
+### Datos normalizados
 ```{r}
 tree_sangre <- C5.0(
               In_hospital_death ~ HCT_mean + Platelets_mean + WBC_mean,
@@ -671,7 +754,6 @@ plot(tree_sangre)
 ```
 
 ```{r}
-pred_sangre <- predict(tree_sangre, data_norm_sangre.test_set)
 metrics(tree_sangre, data_norm_sangre.test_set)
 ```
 

@@ -6,6 +6,7 @@ output:
     keep_md: yes
     number_sections: yes
     toc: yes
+    toc_depth: 2
   pdf_document: 
     number_sections: yes
     toc: yes
@@ -297,7 +298,7 @@ Se genera una tabla con resumenes de  las variables por paciente: media, desviac
 
 
 ```r
-series_summary=series_corazon %>%
+  series_summary=series_corazon %>%
   group_by(RecordID,Parameter) %>%
   #summarise(mean=mean(Value,na.rm=TRUE), min = min(Value,na.rm = TRUE))%>%
   summarise(mean=mean(Value,na.rm=TRUE))%>%
@@ -342,6 +343,12 @@ nrow(data_tidy_corazon)
 ```
 ## [1] 3978
 ```
+
+```r
+ggcorr(data_tidy_corazon, label = TRUE, label_size = 3, label_round = 3)
+```
+
+![](proyecto_final_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
 
 
 ```r
@@ -391,6 +398,12 @@ nrow(data_tidy_higado)
 ## [1] 2165
 ```
 
+```r
+ggcorr(data_tidy_higado, label = TRUE, label_size = 3, label_round = 3)
+```
+
+![](proyecto_final_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+
 
 ```r
 series_summary=series_rinon %>%
@@ -439,6 +452,12 @@ nrow(data_tidy_rinon)
 ## [1] 3995
 ```
 
+```r
+ggcorr(data_tidy_rinon, label = TRUE, label_size = 3, label_round = 3)
+```
+
+![](proyecto_final_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+
 
 ```r
 series_summary=series_sangre %>%
@@ -480,6 +499,12 @@ nrow(data_tidy_sangre)
 ## [1] 3937
 ```
 
+```r
+ggcorr(data_tidy_sangre, label = TRUE, label_size = 3, label_round = 3)
+```
+
+![](proyecto_final_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+
 ### Porcentaje NAs
 
 
@@ -488,6 +513,65 @@ NA_corazon <- PercentageNA(data_tidy_corazon)
 NA_higado <- PercentageNA(data_tidy_higado)
 NA_rinon <- PercentageNA(data_tidy_rinon)
 NA_sangre <- PercentageNA(data_tidy_sangre)
+
+NA_corazon
+```
+
+```
+##                           na
+## In_hospital_death 0.00000000
+## AST_mean          0.56636501
+## DiasABP_mean      0.29638009
+## HR_mean           0.01030669
+## MAP_mean          0.29813977
+## NIDiasABP_mean    0.12443439
+## NIMAP_mean        0.12493715
+## NISysABP_mean     0.12192056
+## PaCO2_mean        0.24007039
+## PaO2_mean         0.24007039
+## pH_mean           0.23579688
+## SysABP_mean       0.29638009
+```
+
+```r
+NA_higado
+```
+
+```
+##                          na
+## In_hospital_death 0.0000000
+## Albumin_mean      0.2540416
+## ALP_mean          0.2193995
+## ALT_mean          0.2050808
+## AST_mean          0.2032333
+## Bilirubin_mean    0.2064665
+## Cholesterol_mean  0.8591224
+```
+
+```r
+NA_rinon
+```
+
+```
+##                           na
+## In_hospital_death 0.00000000
+## ALP_mean          0.57697121
+## BUN_mean          0.01476846
+## Creatinine_mean   0.01476846
+## HCO3_mean         0.01777222
+## Urine_mean        0.02803504
+```
+
+```r
+NA_sangre
+```
+
+```
+##                             na
+## In_hospital_death 0.0000000000
+## HCT_mean          0.0002540005
+## Platelets_mean    0.0012700025
+## WBC_mean          0.0025400051
 ```
 
 
@@ -542,22 +626,19 @@ NA_Plot_Sangre
 
 #### ¿Qué variables deberíamos mantener?
 
-Tras realizar el cálculo de valores no asignados de cada variables según el órgano podemos detectar aquellas variables que tienen un alto porcentaje de NA's. Con tal de conseguir unos datos lo más fidedignos posibles hemos decidido eliminar aquellas variables cuyo porcentaje de NA's superase el 30%.
+Tras realizar el cálculo de valores no asignados de cada variables según el órgano podemos detectar aquellas variables que tienen un alto porcentaje de NA's. Con tal de conseguir unos datos lo más fidedignos posibles hemos decidido eliminar aquellas variables cuyo porcentaje de NA's superase el 25%.
 Así pues, las variables resultantes de cada órgano son:
 
 
 **Corazón**
 
-- DiasABP_mean.
 - HR_mean.
-- MAP_mean.
 - NIDiasABP_mean.
 - NIMAP_mean.
 - NISysABP_mean.
 - PaCO2_mean.
 - PaO2_mean.
 - pH_mean.
-- SysABP_mean.
 
 
 **Higado**
@@ -584,7 +665,7 @@ Así pues, las variables resultantes de cada órgano son:
 - WBC.
 
 
-*En todas ellas se presupone la conservación de la variable RecordID y la variable a predecir in_hospital_death.*
+*En todas ellas se presupone la conservación de la variable a predecir in_hospital_death.*
 
 
 ### Selección de variables a utilizar
@@ -592,8 +673,16 @@ Así pues, las variables resultantes de cada órgano son:
 En las siguientes instrucciones se procede a retirar las variables que en el anterior apartada hemos visto que sobrepasan nuestro límite de NA's para cada órgano. Además, para el resto de variables que se mantienen en los distintos *datasets* se ha decidido sustituir los valores no asignados restantes por la media, de esta manera podemos seguir computando resultados sin tener que prescindir de demasiados registros.
 
 
+eliminadas corazon:
+
+- AST_mean
+- DiasABP_mean.
+- MAP_mean.
+- SysABP_mean.
+
+
 ```r
-data_tidy_corazon <- select(data_tidy_corazon, -AST_mean)
+data_tidy_corazon <- select(data_tidy_corazon, -AST_mean, -DiasABP_mean, -MAP_mean, -SysABP_mean)
 for(i in 1:ncol(data_tidy_corazon)){
   data_tidy_corazon[is.na(data_tidy_corazon[,i]), i] <- mean(data_tidy_corazon[,i], na.rm = TRUE)
 }
@@ -619,16 +708,13 @@ PercentageNA(data_tidy_corazon)
 ```
 ##                   na
 ## In_hospital_death  0
-## DiasABP_mean       0
 ## HR_mean            0
-## MAP_mean           0
 ## NIDiasABP_mean     0
 ## NIMAP_mean         0
 ## NISysABP_mean      0
 ## PaCO2_mean         0
 ## PaO2_mean          0
 ## pH_mean            0
-## SysABP_mean        0
 ```
 
 ```r
@@ -670,36 +756,33 @@ PercentageNA(data_tidy_sangre)
 ## WBC_mean           0
 ```
 
-# Primeras predicciones
+# Fases de estudio
 
 En primer lugar, trataremos de realizar unas predicciones no muy sofisticadas haciendo uso de un modelo clasificador de red neuronal.
 
 Haremos uso de la siguiente función para extraer las distintas métricas de cada modelo.
 
 ```r
-metrics = function(neural_net, data_test, all_metrics = TRUE){
-  pred <- predict(neural_net, data_test)
+metrics = function(neural_net, data_test){
+  pred <- predict(neural_net, data_test, type = "class")
   
-  conf_Matrix <- table(prediction = round(pred), actual = data_test$In_hospital_death)
+  conf_Matrix <- table(prediction = pred, actual = data_test$In_hospital_death)
   
   accuracy <- sum(diag(conf_Matrix))/sum(conf_Matrix)
   cat(sprintf("Accuracy: %f", accuracy))
   
-  precision <- conf_Matrix[1,1]/sum(conf_Matrix[1,])
+  precision <- conf_Matrix[1,1]/sum(conf_Matrix[,1])
   cat(sprintf("\nPrecision C1: %f", precision))
   
   if(nrow(conf_Matrix) > 1){
-    precision <- conf_Matrix[2,2]/sum(conf_Matrix[2,])
+    precision <- conf_Matrix[2,2]/sum(conf_Matrix[,2])
     cat(sprintf("\nPrecision C2: %f", precision))
+  }else{
+    cat(sprintf("\nPrecision C2: 0"))
   }
   
   recall <- conf_Matrix[1,1]/sum(conf_Matrix[,1])
   cat(sprintf("\nRecall: %f", recall))
-  
-  if(all_metrics == TRUE){
-    specificity <- conf_Matrix[2,2]/sum(conf_Matrix[,2])
-    cat(sprintf("\nSpecificity: %f", specificity))
-  }
   
   return (conf_Matrix)
 }
@@ -710,48 +793,85 @@ metrics = function(neural_net, data_test, all_metrics = TRUE){
 **CORAZÓN**
 
 ```r
+nomalizar_1 <- function(x){ 
+  valor_zero = (x - min(x))/(max(x)-min(x))
+  return ((valor_zero*2)-1)
+}
+```
+
+
+```r
 set.seed(101)
 
-data_norm_corazon <- as.data.frame(apply(data_tidy_corazon[, 1:11], 2, function(x) (x - min(x))/(max(x)-min(x))))
+data_norm_corazon <- as.data.frame(apply(data_tidy_corazon[, 2:8], 2, nomalizar_1))
+In_hospital_death <- as.factor(data_tidy_corazon$In_hospital_death)
+data_tidy_corazon <-data.frame(data_tidy_corazon[,2:8],In_hospital_death)
+data_norm_corazon <- data.frame(data_norm_corazon,In_hospital_death)
+
+# data_norm_corazon <- as.data.frame(apply(data_tidy_corazon[, 1:11], 2, nomalizar_1))
 
 split_idx <- sample(seq_len(nrow(data_tidy_corazon)), size = 0.67*nrow(data_tidy_corazon))
 data_tidy_corazon.train_set <- data_tidy_corazon[split_idx,]
 data_tidy_corazon.test_set <- data_tidy_corazon[-split_idx,]
 
-split_idx <- sample(seq_len(nrow(data_norm_corazon)), size = 0.67*nrow(data_tidy_corazon))
+split_idx <- sample(seq_len(nrow(data_norm_corazon)), size = 0.67*nrow(data_norm_corazon))
 data_norm_corazon.train_set <- data_norm_corazon[split_idx,]
 data_norm_corazon.test_set <- data_norm_corazon[-split_idx,]
 ```
+
 **HÍGADO**
 
 ```r
-data_norm_higado <- as.data.frame(apply(data_tidy_higado[, 1:6], 2, function(x) (x - min(x))/(max(x)-min(x))))
+set.seed(101)
+
+data_norm_higado <- as.data.frame(apply(data_tidy_higado[, 2:6], 2, nomalizar_1))
+In_hospital_death <- as.factor(data_tidy_higado$In_hospital_death)
+data_tidy_higado <-data.frame(data_tidy_higado[,2:6],In_hospital_death)
+data_norm_higado <- data.frame(data_norm_higado,In_hospital_death)
+
+# data_norm_higado <- as.data.frame(apply(data_tidy_higado[, 1:6], 2, nomalizar_1))
 
 split_idx <- sample(seq_len(nrow(data_tidy_higado)), size = 0.67*nrow(data_tidy_higado))
 data_tidy_higado.train_set <- data_tidy_higado[split_idx,]
 data_tidy_higado.test_set <- data_tidy_higado[-split_idx,]
 
-split_idx <- sample(seq_len(nrow(data_norm_higado)), size = 0.67*nrow(data_tidy_higado))
+split_idx <- sample(seq_len(nrow(data_norm_higado)), size = 0.67*nrow(data_norm_higado))
 data_norm_higado.train_set <- data_norm_higado[split_idx,]
 data_norm_higado.test_set <- data_norm_higado[-split_idx,]
 ```
+
 **RIÑÓN**
 
 ```r
-data_norm_rinon <- as.data.frame(apply(data_tidy_rinon[, 1:5], 2, function(x) (x - min(x))/(max(x)-min(x))))
+set.seed(101)
+
+data_norm_rinon <- as.data.frame(apply(data_tidy_rinon[, 2:5], 2, nomalizar_1))
+In_hospital_death <- as.factor(data_tidy_rinon$In_hospital_death)
+data_tidy_rinon <-data.frame(data_tidy_rinon[,2:5],In_hospital_death)
+data_norm_rinon <- data.frame(data_norm_rinon,In_hospital_death)
+
+# data_norm_rinon <- as.data.frame(apply(data_tidy_rinon[, 1:5], 2, nomalizar_1))
 
 split_idx <- sample(seq_len(nrow(data_tidy_rinon)), size = 0.67*nrow(data_tidy_rinon))
 data_tidy_rinon.train_set <- data_tidy_rinon[split_idx,]
 data_tidy_rinon.test_set <- data_tidy_rinon[-split_idx,]
 
-split_idx <- sample(seq_len(nrow(data_norm_rinon)), size = 0.67*nrow(data_tidy_rinon))
+split_idx <- sample(seq_len(nrow(data_norm_rinon)), size = 0.67*nrow(data_norm_rinon))
 data_norm_rinon.train_set <- data_norm_rinon[split_idx,]
 data_norm_rinon.test_set <- data_norm_rinon[-split_idx,]
 ```
+
 **SANGRE**
 
 ```r
-data_norm_sangre <- as.data.frame(apply(data_tidy_sangre[, 1:4], 2, function(x) (x - min(x))/(max(x)-min(x))))
+set.seed(101)
+
+data_norm_sangre <- as.data.frame(apply(data_tidy_sangre[, 2:4], 2, nomalizar_1))
+In_hospital_death <- as.factor(data_tidy_sangre$In_hospital_death)
+data_tidy_sangre <-data.frame(data_tidy_sangre[2:4],In_hospital_death)
+data_norm_sangre <- data.frame(data_norm_sangre,In_hospital_death)
+
+# data_norm_sangre <- as.data.frame(apply(data_tidy_sangre[, 1:4], 2, nomalizar_1))
 
 split_idx <- sample(seq_len(nrow(data_tidy_sangre)), size = 0.67*nrow(data_tidy_sangre))
 data_tidy_sangre.train_set <- data_tidy_sangre[split_idx,]
@@ -761,44 +881,721 @@ split_idx <- sample(seq_len(nrow(data_norm_sangre)), size = 0.67*nrow(data_norm_
 data_norm_sangre.train_set <- data_norm_sangre[split_idx,]
 data_norm_sangre.test_set <- data_norm_sangre[-split_idx,]
 ```
-## Predicción corazón
-
-## Predicción sangre
-
-```r
-nn_sangre <- neuralnet("In_hospital_death ~ HCT_mean + Platelets_mean + WBC_mean", 
-                         data = data_norm_sangre.train_set,
-                         hidden = c(4,8,8,4),
-                         algorithm = "backprop",
-                         linear.output = FALSE, # FALSE: Classification TRUE: Regression
-                         err.fct = "sse", #Error Function 
-                         act.fct = "logistic",
-                         learningrate = 0.01
-                         ) #Activation Function
-plot(nn_sangre)
-```
+## **Fase 1**: Naive Bayes estudio preliminar 
 
 
 ```r
-pred <- predict(nn_sangre, data_norm_sangre.test_set)
-#data.frame(data_norm_sangre.test_set$In_hospital_death,round(pred))
-metrics(nn_sangre, data_norm_sangre.test_set, FALSE)
+library(e1071)
 ```
 
 ```
-## Accuracy: 0.864615
-## Precision C1: 0.869666
-## Precision C2: 0.272727
-## Recall: 0.992914
+## Warning: package 'e1071' was built under R version 3.6.2
+```
+
+### Predicción corazón
+**Datos sin normalizar**
+
+```r
+NBclassfier_corazon <- naiveBayes(
+                          In_hospital_death ~ HR_mean + NIDiasABP_mean + NIMAP_mean + NISysABP_mean + PaCO2_mean + PaO2_mean + pH_mean,
+                          data=data_tidy_corazon.train_set
+                          )
+```
+
+
+```r
+metrics(NBclassfier_corazon, data_tidy_corazon.test_set)
+```
+
+```
+## Accuracy: 0.849962
+## Precision C1: 0.970951
+## Precision C2: 0.073446
+## Recall: 0.970951
 ```
 
 ```
 ##           actual
 ## prediction    0    1
-##          0 1121  168
-##          1    8    3
+##          0 1103  164
+##          1   33   13
+```
+**Datos normalizados**
+
+```r
+NBclassfier_corazon <- naiveBayes(
+                          In_hospital_death ~ HR_mean + NIDiasABP_mean + NIMAP_mean + NISysABP_mean + PaCO2_mean + PaO2_mean + pH_mean,
+                          data=data_norm_corazon.train_set
+                          )
 ```
 
+
+```r
+metrics(NBclassfier_corazon, data_norm_corazon.test_set)
+```
+
+```
+## Accuracy: 0.843869
+## Precision C1: 0.995491
+## Precision C2: 0.019608
+## Recall: 0.995491
+```
+
+```
+##           actual
+## prediction    0    1
+##          0 1104  200
+##          1    5    4
+```
+
+### Predicción hígado
+**Datos sin normalizar**
+
+```r
+NBclassfier_higado <- naiveBayes(
+                          In_hospital_death ~ Albumin_mean + ALP_mean + ALT_mean + AST_mean + Bilirubin_mean,
+                          data = data_tidy_higado.train_set,
+                          )
+```
+
+
+```r
+metrics(NBclassfier_higado, data_tidy_higado.test_set)
+```
+
+```
+## Accuracy: 0.823776
+## Precision C1: 0.965458
+## Precision C2: 0.220588
+## Recall: 0.965458
+```
+
+```
+##           actual
+## prediction   0   1
+##          0 559 106
+##          1  20  30
+```
+
+**Datos normalizados**
+
+```r
+NBclassfier_higado <- naiveBayes(
+                          In_hospital_death ~ Albumin_mean + ALP_mean + ALT_mean + AST_mean + Bilirubin_mean,
+                          data = data_norm_higado.train_set,
+                          )
+```
+
+
+```r
+metrics(NBclassfier_higado, data_norm_higado.test_set)
+```
+
+```
+## Accuracy: 0.798601
+## Precision C1: 0.944348
+## Precision C2: 0.200000
+## Recall: 0.944348
+```
+
+```
+##           actual
+## prediction   0   1
+##          0 543 112
+##          1  32  28
+```
+
+### Predicción Riñón
+
+**Datos sin normalizar**
+
+```r
+NBclassfier_rinon <- naiveBayes(
+                          In_hospital_death ~ BUN_mean + Creatinine_mean + HCO3_mean + Urine_mean,
+                          data = data_tidy_rinon.train_set
+                          )
+```
+
+
+```r
+metrics(NBclassfier_rinon, data_tidy_rinon.test_set)
+```
+
+```
+## Accuracy: 0.819560
+## Precision C1: 0.914634
+## Precision C2: 0.181287
+## Recall: 0.914634
+```
+
+```
+##           actual
+## prediction    0    1
+##          0 1050  140
+##          1   98   31
+```
+**Datos normalizados**
+
+
+```r
+NBclassfier_rinon <- naiveBayes(
+                          In_hospital_death ~ BUN_mean + Creatinine_mean + HCO3_mean + Urine_mean,
+                          data = data_norm_rinon.train_set
+                          )
+```
+
+
+```r
+metrics(NBclassfier_rinon, data_norm_rinon.test_set)
+```
+
+```
+## Accuracy: 0.822593
+## Precision C1: 0.926937
+## Precision C2: 0.174863
+## Recall: 0.926937
+```
+
+```
+##           actual
+## prediction    0    1
+##          0 1053  151
+##          1   83   32
+```
+
+### Predicción Sangre
+
+**Datos sin normalizar**
+
+
+```r
+NBclassfier_sangre <- naiveBayes(
+                          In_hospital_death ~ HCT_mean + Platelets_mean + WBC_mean,
+                          data = data_tidy_sangre.train_set
+                          )
+```
+
+
+```r
+metrics(NBclassfier_sangre, data_tidy_sangre.test_set)
+```
+
+```
+## Accuracy: 0.855385
+## Precision C1: 0.981267
+## Precision C2: 0.067039
+## Recall: 0.981267
+```
+
+```
+##           actual
+## prediction    0    1
+##          0 1100  167
+##          1   21   12
+```
+
+**Datos normalizados**
+
+
+```r
+NBclassfier_sangre <- naiveBayes(
+                          In_hospital_death ~ HCT_mean + Platelets_mean + WBC_mean,
+                          data = data_norm_sangre.train_set
+                          )
+```
+
+
+```r
+metrics(NBclassfier_sangre, data_norm_sangre.test_set)
+```
+
+```
+## Accuracy: 0.849231
+## Precision C1: 0.970641
+## Precision C2: 0.073864
+## Recall: 0.970641
+```
+
+```
+##           actual
+## prediction    0    1
+##          0 1091  163
+##          1   33   13
+```
+
+
+## **Fase 2**: Tree classification
+
+Los árboles nos permiten escoger los orgános que son más determinantes para el in_hospital_death. Fase para descartar uno o más orgános por completo. 
+
+
+```r
+library(C50)
+```
+
+```
+## Warning: package 'C50' was built under R version 3.6.2
+```
+``
+
+### Predicción Corazón
+
+**Datos sin normalizar**
+
+```r
+tree_corazon <- C5.0(
+              In_hospital_death ~ HR_mean + NIDiasABP_mean + NIMAP_mean + NISysABP_mean + PaCO2_mean + PaO2_mean + pH_mean,
+              data = data_tidy_corazon.train_set
+              )
+plot(tree_corazon)
+```
+
+![](proyecto_final_files/figure-html/unnamed-chunk-38-1.png)<!-- -->
+
+```r
+metrics(tree_corazon, data_tidy_corazon.test_set)
+```
+
+```
+## Accuracy: 0.863671
+## Precision C1: 0.992077
+## Precision C2: 0.039548
+## Recall: 0.992077
+```
+
+```
+##           actual
+## prediction    0    1
+##          0 1127  170
+##          1    9    7
+```
+**Datos normalizados**
+
+```r
+tree_corazon <- C5.0(
+              In_hospital_death ~ HR_mean + NIDiasABP_mean + NIMAP_mean + NISysABP_mean + PaCO2_mean + PaO2_mean + pH_mean,
+              data = data_norm_corazon.train_set
+              )
+plot(tree_corazon)
+```
+
+![](proyecto_final_files/figure-html/unnamed-chunk-40-1.png)<!-- -->
+
+```r
+metrics(tree_corazon, data_norm_corazon.test_set)
+```
+
+```
+## Accuracy: 0.841584
+## Precision C1: 0.992786
+## Precision C2: 0.019608
+## Recall: 0.992786
+```
+
+```
+##           actual
+## prediction    0    1
+##          0 1101  200
+##          1    8    4
+```
+
+
+### Predicción Higado
+**Datos sin normalizar**
+
+```r
+tree_higado <- C5.0(
+              In_hospital_death ~ Albumin_mean + ALP_mean + ALT_mean + AST_mean + Bilirubin_mean,
+              data = data_tidy_higado.train_set
+              )
+plot(tree_higado)
+```
+
+![](proyecto_final_files/figure-html/unnamed-chunk-42-1.png)<!-- -->
+
+
+```r
+metrics(tree_higado, data_tidy_higado.test_set)
+```
+
+```
+## Accuracy: 0.809790
+## Precision C1: 1.000000
+## Precision C2: 0.000000
+## Recall: 1.000000
+```
+
+```
+##           actual
+## prediction   0   1
+##          0 579 136
+##          1   0   0
+```
+**Datos normalizados**
+
+
+```r
+tree_higado <- C5.0(
+              In_hospital_death ~ Albumin_mean + ALP_mean + ALT_mean + AST_mean + Bilirubin_mean,
+              data = data_norm_higado.train_set,
+              control = C5.0Control(minCases = 1, CF = 0.0005)
+              )
+plot(tree_higado)
+```
+
+![](proyecto_final_files/figure-html/unnamed-chunk-44-1.png)<!-- -->
+
+
+```r
+metrics(tree_higado, data_norm_higado.test_set)
+```
+
+```
+## Accuracy: 0.804196
+## Precision C1: 1.000000
+## Precision C2: 0.000000
+## Recall: 1.000000
+```
+
+```
+##           actual
+## prediction   0   1
+##          0 575 140
+##          1   0   0
+```
+
+### Predicción Riñón
+
+**Datos sin normalizar**
+
+```r
+tree_rinon <- C5.0(
+              In_hospital_death ~ BUN_mean + Creatinine_mean + HCO3_mean + Urine_mean,
+              data = data_tidy_rinon.train_set
+              )
+plot(tree_rinon)
+```
+
+![](proyecto_final_files/figure-html/unnamed-chunk-46-1.png)<!-- -->
+
+
+```r
+metrics(tree_rinon, data_tidy_rinon.test_set)
+```
+
+```
+## Accuracy: 0.874905
+## Precision C1: 0.986063
+## Precision C2: 0.128655
+## Recall: 0.986063
+```
+
+```
+##           actual
+## prediction    0    1
+##          0 1132  149
+##          1   16   22
+```
+**Datos normalizados**
+
+```r
+tree_rinon <- C5.0(
+              In_hospital_death ~ BUN_mean + Creatinine_mean + HCO3_mean + Urine_mean,
+              data = data_norm_rinon.train_set
+              )
+plot(tree_rinon)
+```
+
+![](proyecto_final_files/figure-html/unnamed-chunk-48-1.png)<!-- -->
+
+
+```r
+metrics(tree_rinon, data_norm_rinon.test_set)
+```
+
+```
+## Accuracy: 0.862775
+## Precision C1: 0.980634
+## Precision C2: 0.131148
+## Recall: 0.980634
+```
+
+```
+##           actual
+## prediction    0    1
+##          0 1114  159
+##          1   22   24
+```
+
+
+### Predicción Sangre
+
+**Datos sin normalizar**
+
+```r
+tree_sangre <- C5.0(
+              In_hospital_death ~ HCT_mean + Platelets_mean + WBC_mean,
+              data = data_tidy_sangre.train_set
+              )
+plot(tree_sangre)
+```
+
+![](proyecto_final_files/figure-html/unnamed-chunk-50-1.png)<!-- -->
+
+
+```r
+metrics(tree_sangre, data_tidy_sangre.test_set)
+```
+
+```
+## Accuracy: 0.862308
+## Precision C1: 1.000000
+## Precision C2: 0.000000
+## Recall: 1.000000
+```
+
+```
+##           actual
+## prediction    0    1
+##          0 1121  179
+##          1    0    0
+```
+
+**Datos normalizados**
+
+```r
+tree_sangre <- C5.0(
+              In_hospital_death ~ HCT_mean + Platelets_mean + WBC_mean,
+              data = data_norm_sangre.train_set
+              )
+plot(tree_sangre)
+```
+
+![](proyecto_final_files/figure-html/unnamed-chunk-52-1.png)<!-- -->
+
+
+```r
+metrics(tree_sangre, data_norm_sangre.test_set)
+```
+
+```
+## Accuracy: 0.864615
+## Precision C1: 1.000000
+## Precision C2: 0.000000
+## Recall: 1.000000
+```
+
+```
+##           actual
+## prediction    0    1
+##          0 1124  176
+##          1    0    0
+```
+
+## **Fase 3**: Association Rules
+
+Dentro de los organos escogidos en la fase anterior (Corazón y Riñón) identificamos las variables que más influencia tienen en la muerte en hospital para cada órgano. Para ello haremos uso de las association rules.
+
+```r
+library(arules)
+```
+
+```
+## Warning: package 'arules' was built under R version 3.6.2
+```
+
+```
+## Loading required package: Matrix
+```
+
+```
+## 
+## Attaching package: 'Matrix'
+```
+
+```
+## The following objects are masked from 'package:tidyr':
+## 
+##     expand, pack, unpack
+```
+
+```
+## 
+## Attaching package: 'arules'
+```
+
+```
+## The following object is masked from 'package:dplyr':
+## 
+##     recode
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     abbreviate, write
+```
+
+```r
+library(arulesViz)
+```
+
+```
+## Warning: package 'arulesViz' was built under R version 3.6.2
+```
+
+```
+## Loading required package: grid
+```
+
+```
+## Registered S3 method overwritten by 'seriation':
+##   method         from 
+##   reorder.hclust gclus
+```
+### Reglas del Corazón
+
+```r
+corazon_rules <- apriori(data = data_norm_corazon, 
+                         parameter = list (supp=0.001,conf = 0.80),
+                        
+                         appearance = list (rhs="In_hospital_death=1")
+                         )
+```
+
+```
+## Warning: Column(s) 1, 2, 3, 4, 5, 6, 7 not logical or factor. Applying
+## default discretization (see '? discretizeDF').
+```
+
+```
+## Apriori
+## 
+## Parameter specification:
+##  confidence minval smax arem  aval originalSupport maxtime support minlen
+##         0.8    0.1    1 none FALSE            TRUE       5   0.001      1
+##  maxlen target   ext
+##      10  rules FALSE
+## 
+## Algorithmic control:
+##  filter tree heap memopt load sort verbose
+##     0.1 TRUE TRUE  FALSE TRUE    2    TRUE
+## 
+## Absolute minimum support count: 3 
+## 
+## set item appearances ...[1 item(s)] done [0.00s].
+## set transactions ...[23 item(s), 3978 transaction(s)] done [0.00s].
+## sorting and recoding items ... [23 item(s)] done [0.00s].
+## creating transaction tree ... done [0.00s].
+## checking subsets of size 1 2 3 4 5 6 7 8 done [0.02s].
+## writing ... [5 rule(s)] done [0.00s].
+## creating S4 object  ... done [0.00s].
+```
+
+```r
+corazon_rules
+```
+
+```
+## set of 5 rules
+```
+
+```r
+inspect(sort(corazon_rules, by = "confidence"))
+```
+
+```
+##     lhs                             rhs                      support confidence     lift count
+## [1] {HR_mean=[-0.205,0.0466),                                                                 
+##      NIDiasABP_mean=[-1,-0.012),                                                              
+##      NISysABP_mean=[-1,-0.0598),                                                              
+##      PaCO2_mean=[-0.402,1],                                                                   
+##      pH_mean=[-0.982,1]}         => {In_hospital_death=1} 0.00100553        0.8 5.744404     4
+## [2] {HR_mean=[-0.205,0.0466),                                                                 
+##      NIDiasABP_mean=[-1,-0.012),                                                              
+##      NIMAP_mean=[-1,0.0818),                                                                  
+##      PaCO2_mean=[-0.402,1],                                                                   
+##      pH_mean=[-0.982,1]}         => {In_hospital_death=1} 0.00100553        0.8 5.744404     4
+## [3] {HR_mean=[-0.205,0.0466),                                                                 
+##      NIDiasABP_mean=[-1,-0.012),                                                              
+##      NIMAP_mean=[-1,0.0818),                                                                  
+##      NISysABP_mean=[-1,-0.0598),                                                              
+##      PaCO2_mean=[-0.402,1],                                                                   
+##      pH_mean=[-0.982,1]}         => {In_hospital_death=1} 0.00100553        0.8 5.744404     4
+## [4] {HR_mean=[-1,-0.205),                                                                     
+##      NIDiasABP_mean=[-1,-0.012),                                                              
+##      NIMAP_mean=[0.0818,0.186),                                                               
+##      PaCO2_mean=[-0.402,1],                                                                   
+##      PaO2_mean=[-0.485,1],                                                                    
+##      pH_mean=[-0.983,-0.982)}    => {In_hospital_death=1} 0.00100553        0.8 5.744404     4
+## [5] {HR_mean=[-1,-0.205),                                                                     
+##      NIDiasABP_mean=[-1,-0.012),                                                              
+##      NIMAP_mean=[0.0818,0.186),                                                               
+##      NISysABP_mean=[0.0342,1],                                                                
+##      PaCO2_mean=[-0.402,1],                                                                   
+##      PaO2_mean=[-0.485,1],                                                                    
+##      pH_mean=[-0.983,-0.982)}    => {In_hospital_death=1} 0.00100553        0.8 5.744404     4
+```
+
+
+### Reglas del Riñon
+
+```r
+rinon_rules <- apriori(data = data_norm_rinon, 
+                         parameter = list (supp=0.001,conf = 0.5),
+                        
+                         appearance = list (rhs="In_hospital_death=1")
+                         )
+```
+
+```
+## Warning: Column(s) 1, 2, 3, 4 not logical or factor. Applying default
+## discretization (see '? discretizeDF').
+```
+
+```
+## Apriori
+## 
+## Parameter specification:
+##  confidence minval smax arem  aval originalSupport maxtime support minlen
+##         0.5    0.1    1 none FALSE            TRUE       5   0.001      1
+##  maxlen target   ext
+##      10  rules FALSE
+## 
+## Algorithmic control:
+##  filter tree heap memopt load sort verbose
+##     0.1 TRUE TRUE  FALSE TRUE    2    TRUE
+## 
+## Absolute minimum support count: 3 
+## 
+## set item appearances ...[1 item(s)] done [0.00s].
+## set transactions ...[14 item(s), 3995 transaction(s)] done [0.00s].
+## sorting and recoding items ... [14 item(s)] done [0.00s].
+## creating transaction tree ... done [0.00s].
+## checking subsets of size 1 2 3 4 5 done [0.00s].
+## writing ... [1 rule(s)] done [0.00s].
+## creating S4 object  ... done [0.00s].
+```
+
+```r
+rinon_rules
+```
+
+```
+## set of 1 rules
+```
+
+```r
+inspect(sort(rinon_rules, by = "confidence"))
+```
+
+```
+##     lhs                              rhs                       support confidence     lift count
+## [1] {BUN_mean=[-0.723,1],                                                                       
+##      Creatinine_mean=[-1,-0.926),                                                               
+##      HCO3_mean=[-1,-0.303),                                                                     
+##      Urine_mean=[-1,-0.943)}      => {In_hospital_death=1} 0.001251564        0.5 3.605596     5
+```
 
 
 # Conclusión

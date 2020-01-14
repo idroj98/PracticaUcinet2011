@@ -1,0 +1,17 @@
+base
+tidyverse
+ggplot2
+tibble
+tidyr
+readr
+purrr
+dplyr
+stringr
+forcats
+neuralnet
+e1071
+C50
+Matrix
+arules
+arulesViz
+GGally
